@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Engracia Family Tree</title>
+<meta name="theme-color" content="#2c1a0e">
+<style>
+:root{
+  --parch:#fdf6e3;--parch2:#f3e4c4;--brown:#6b3a1f;--brown2:#8b4513;
+  --gold:#c4920e;--gold2:#e8b84b;--dark:#2c1a0e;--ink:#3a1f0a;--gray:#7a6a58;
+  --red:#8b1a1a;--green:#1a5e2f;--blue:#1a3a6b;--purple:#4a1a6b;--teal:#0f5c5c;
+  --shadow:rgba(0,0,0,.15);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:Georgia,'Times New Roman',serif;background:var(--parch);color:var(--ink);
+  padding-top:calc(52px + env(safe-area-inset-top));}
+
+/* ── HEADER ── */
+header{position:fixed;top:0;left:0;right:0;z-index:100;
+  background:linear-gradient(135deg,var(--brown),var(--dark));border-bottom:3px solid var(--gold);
+  padding-top:env(safe-area-inset-top);box-shadow:0 2px 10px var(--shadow)}
+.bar{height:52px;display:flex;align-items:center;gap:8px;padding:0 12px;max-width:1100px;margin:0 auto}
+.bar h1{flex:1;font-size:1rem;color:var(--gold2);letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar button{background:none;border:1px solid var(--gold);color:var(--gold2);padding:5px 10px;border-radius:5px;
+  cursor:pointer;font:inherit;font-size:.8rem;white-space:nowrap}
+.bar button:hover{background:rgba(196,146,14,.2)}
+.bar button.primary{background:var(--gold);color:var(--dark);font-weight:bold}
+
+/* ── TOOLBAR ── */
+.toolbar{position:sticky;top:calc(52px + env(safe-area-inset-top));z-index:90;background:var(--parch);
+  border-bottom:1px solid var(--gold2);padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+  max-width:1100px;margin:0 auto}
+.toolbar input{flex:1;min-width:150px;padding:8px 12px;border:2px solid var(--gold);border-radius:20px;
+  background:#fff;font:inherit;font-size:.9rem;outline:none}
+.toolbar .tb{background:var(--parch2);border:1px solid var(--brown2);color:var(--brown);padding:6px 10px;
+  border-radius:5px;cursor:pointer;font:inherit;font-size:.78rem}
+.toolbar .tb.on{background:var(--brown2);color:#fff}
+.view-toggle{display:flex;border:1px solid var(--brown2);border-radius:5px;overflow:hidden}
+.view-toggle button{border:none;border-radius:0}
+
+/* ── BRANCH CHIPS ── */
+.chips{display:flex;gap:6px;overflow-x:auto;padding:8px 12px;max-width:1100px;margin:0 auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;background:#fff;border:1px solid var(--gold);color:var(--brown);padding:5px 11px;border-radius:14px;
+  font-size:.75rem;cursor:pointer;white-space:nowrap}
+.chip:hover{background:var(--gold2)}
+
+/* ── TREE LIST ── */
+#tree{max-width:1100px;margin:0 auto;padding:4px 10px 90px}
+.node{margin:4px 0}
+.row{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e3d3ad;border-left:5px solid var(--gray);
+  border-radius:8px;padding:8px 10px;box-shadow:0 1px 3px var(--shadow);cursor:pointer;position:relative}
+.row:hover{box-shadow:0 2px 8px var(--shadow)}
+.row.hl{outline:3px solid var(--gold);animation:pulse 1.2s ease 2}
+@keyframes pulse{50%{outline-color:transparent}}
+.v-founder .row{border-left-color:var(--red);background:#fff7f7}
+.v-patriarch .row{border-left-color:var(--gold);background:#fffcf0}
+.v-source .row{border-left-color:#2e7d32;background:#f4fff6}
+.v-reviser .row{border-left-color:var(--blue);background:#f1f5ff}
+.v-key .row{border-left-color:var(--teal)}
+.v-gen7 .row{border-left-color:var(--purple);background:#fbf3ff}
+.tog{width:26px;height:26px;flex:none;border-radius:50%;border:1px solid var(--brown2);background:var(--parch);
+  color:var(--brown);font-size:.85rem;display:flex;align-items:center;justify-content:center;font-weight:bold}
+.tog.leaf{visibility:hidden}
+.pic{width:46px;height:46px;flex:none;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:var(--parch2)}
+.pic svg{width:100%;height:100%;border-radius:50%}
+.info{flex:1;min-width:0}
+.nm{font-weight:bold;font-size:.92rem;line-height:1.25}
+.nm small{font-weight:normal;color:var(--gray);font-size:.78rem}
+.meta{font-size:.76rem;color:var(--gray);margin-top:2px;display:flex;flex-wrap:wrap;gap:4px 10px}
+.meta .sp{color:var(--brown2)}
+.meta .sp b{color:var(--gold);font-weight:normal}
+.cnt{flex:none;background:var(--parch2);border:1px solid var(--gold2);color:var(--brown);font-size:.72rem;
+  padding:2px 8px;border-radius:10px}
+.more{flex:none;background:none;border:none;color:var(--brown2);font-size:1.1rem;cursor:pointer;padding:4px 6px}
+.detail{display:none;background:#fffdf7;border:1px solid #e3d3ad;border-top:none;border-radius:0 0 8px 8px;
+  margin:-4px 0 0 36px;padding:10px 12px;font-size:.84rem;line-height:1.55}
+.node.open > .detail{display:block}
+.detail p{margin-bottom:5px}
+.cmts{margin-top:10px;padding-top:8px;border-top:1px dashed #d9c290}
+.cmts h4{font-size:.8rem;color:var(--brown2);margin-bottom:6px}
+.cmts h4 span{background:var(--gold);color:var(--dark);border-radius:9px;padding:0 7px;font-size:.7rem}
+.cmt{background:#fff;border:1px solid #eadfc4;border-left:3px solid var(--gold2);border-radius:5px;padding:7px 9px;margin-bottom:6px}
+.ctext{white-space:pre-wrap;font-size:.84rem}
+.cmeta{font-size:.72rem;color:var(--gray);margin-top:4px;display:flex;align-items:center;gap:8px}
+.cdel{margin-left:auto;background:none;border:none;color:var(--red);cursor:pointer;font-size:.8rem;padding:2px 6px}
+.cnone{color:var(--gray);font-size:.8rem}
+.cform{display:grid;gap:6px;margin-top:6px}
+.cform input,.cform textarea{width:100%;padding:8px;border:1px solid var(--brown2);border-radius:5px;font:inherit;font-size:.84rem;background:#fff}
+.cform textarea{height:64px;resize:vertical}
+.cpost{justify-self:start;background:var(--gold);color:var(--dark);border:none;border-radius:5px;padding:8px 14px;font:inherit;font-size:.8rem;cursor:pointer}
+.detail .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.detail .acts button{border:none;border-radius:5px;padding:7px 11px;font:inherit;font-size:.78rem;cursor:pointer;color:#fff}
+.b-edit{background:var(--brown2)}.b-photo{background:var(--gold);color:var(--dark)!important}
+.b-child{background:var(--green)}.b-del{background:var(--red)}
+.kids{display:none;margin-left:22px;padding-left:12px;border-left:2px solid #d9c290;position:relative}
+.node.exp > .kids{display:block}
+.kids > .node::before{content:"";position:absolute;left:-12px;top:27px;width:12px;height:2px;background:#d9c290}
+.kids > .node{position:relative}
+@media (max-width:600px){
+  .kids{margin-left:10px;padding-left:8px}.kids>.node::before{width:8px;left:-8px}
+  .detail{margin-left:0}.pic{width:40px;height:40px}.nm{font-size:.86rem}.bar h1{font-size:.85rem}
+  .toolbar .tb span{display:none}
+}
+
+/* ── INTRO CARD ── */
+#intro{max-width:1100px;margin:0 auto;padding:6px 10px 0}
+.intro-card{background:linear-gradient(135deg,#fffdf6,#f6e8c9);border:1px solid var(--gold);border-left:5px solid var(--red);border-radius:8px;padding:12px 14px;box-shadow:0 1px 4px var(--shadow)}
+.intro-kicker{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--brown2);margin-bottom:4px}
+.intro-card p{font-size:.88rem;line-height:1.5}
+.intro-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
+.intro-src{font-size:.72rem;color:var(--gray);font-style:italic}
+
+/* ── STORY ── */
+#story{display:none;max-width:720px;margin:0 auto;padding:10px 18px 80px;font-size:1rem;line-height:1.7}
+#story.on{display:block}
+.title-page{text-align:center;margin:10px 0 26px}
+.tp-rule{height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:12px 0}
+.title-page h1{font-size:2rem;letter-spacing:.2em;color:var(--red);margin:8px 0 4px}
+.title-page h2{font-size:1rem;font-weight:normal;font-style:italic;color:var(--brown);line-height:1.5}
+.tp-by{font-size:.82rem;color:var(--gray);margin:10px 0;line-height:1.5}
+.tp-by b{color:var(--brown);font-size:.9rem}
+#story h3{font-size:1.05rem;color:var(--brown2);margin:22px 0 6px;padding-bottom:3px;border-bottom:1px solid var(--gold2)}
+#story p{margin-bottom:12px;text-align:justify}
+#story p:first-of-type::first-letter{}
+#story h3 + p::first-letter{font-size:1.9em;font-weight:bold;color:var(--red);float:left;line-height:.9;padding:3px 5px 0 0}
+#story sup{color:var(--red);font-size:.7em}
+.story-notes{font-size:.82rem;color:var(--gray);border-top:1px solid var(--gold2);margin-top:18px;padding-top:10px}
+.story-notes p{margin-bottom:6px;text-align:left}
+.rename{border-collapse:collapse;width:100%;font-size:.9rem;margin:6px 0 20px}
+.rename th{background:var(--brown);color:var(--gold2);padding:7px;font-weight:normal}
+.rename td{padding:6px 8px;border-bottom:1px solid #e3d3ad}
+.rename td:nth-child(2){color:var(--gold);text-align:center;width:30px}
+.story-cta{text-align:center;margin-top:20px}
+.story-cta .tb{font-size:.95rem;padding:10px 18px}
+@media (max-width:600px){#story{font-size:.95rem;padding:8px 14px 80px}.title-page h1{font-size:1.5rem}}
+
+/* ── CHART VIEW (PC) ── */
+#chart{display:none;position:relative;overflow:auto;height:calc(100vh - 110px);background:
+  repeating-linear-gradient(0deg,transparent 0 39px,rgba(139,69,19,.05) 39px 40px),
+  repeating-linear-gradient(90deg,transparent 0 39px,rgba(139,69,19,.05) 39px 40px);cursor:grab}
+#chart.on{display:block}
+#cinner{position:relative;transform-origin:0 0}
+#chart svg{position:absolute;top:0;left:0}
+#czoom{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:4px;z-index:96}
+#czoom button{width:40px;height:40px;border-radius:7px;border:1px solid var(--gold);background:var(--brown);color:var(--gold2);font-size:1.1rem;cursor:pointer}
+.cnode{position:absolute;width:140px;background:#fff;border:2px solid var(--brown2);border-radius:6px;
+  padding:5px;text-align:center;font-size:.66rem;cursor:pointer;box-shadow:1px 2px 6px var(--shadow)}
+.cnode .av{width:38px;height:38px;margin:0 auto;display:block}
+.cnode img,.cnode .av svg{width:38px;height:38px;border-radius:50%;object-fit:cover;border:1px solid var(--gold);display:block}
+.cnode b{display:block;margin-top:3px;line-height:1.2}
+.cnode small{color:var(--gray)}
+.v-founder .cnode{border-color:var(--red)}.v-patriarch .cnode{border-color:var(--gold)}
+.v-source .cnode{border-color:#2e7d32}.v-reviser .cnode{border-color:var(--blue)}
+.v-key .cnode{border-color:var(--teal)}.v-gen7 .cnode{border-color:var(--purple)}
+
+/* ── OVERLAYS ── */
+.ov{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.6);align-items:flex-end;justify-content:center}
+.ov.open{display:flex}
+.sheet{background:var(--parch);border:3px solid var(--gold);border-bottom:none;border-radius:14px 14px 0 0;
+  width:100%;max-width:560px;max-height:92vh;overflow-y:auto;padding:18px 16px calc(18px + env(safe-area-inset-bottom));position:relative}
+@media (min-width:640px){.ov{align-items:center}.sheet{border-radius:12px;border-bottom:3px solid var(--gold)}}
+.sheet h2{color:var(--brown);font-size:1.05rem;margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid var(--gold2)}
+.x{position:absolute;top:10px;right:12px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--brown)}
+.sheet label{display:block;font-size:.76rem;color:var(--brown);margin:6px 0 2px}
+.sheet input,.sheet select,.sheet textarea{width:100%;padding:9px 10px;border:1px solid var(--brown2);border-radius:5px;
+  font:inherit;font-size:.9rem;background:#fff;color:var(--ink)}
+.sheet textarea{height:70px;resize:vertical}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fa{display:flex;gap:8px;margin-top:14px}
+.fa button{flex:1;padding:11px;border:none;border-radius:6px;font:inherit;font-size:.9rem;cursor:pointer}
+.b-save{background:var(--brown2);color:#fff}.b-cancel{background:#d8cdb8;color:var(--dark)}
+.err{color:var(--red);font-size:.8rem;min-height:18px;margin-top:6px}
+.camrow{display:flex;gap:8px;justify-content:center;margin:4px 0 8px}
+.cam{flex:1;max-width:170px;padding:11px 8px;border:2px solid var(--gold);border-radius:8px;background:#fff;color:var(--brown);
+  font:inherit;font-size:.88rem;cursor:pointer}
+.cam:active{background:var(--parch2)}
+.photorow{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.photorow .camrow{flex-direction:column;margin:0;flex:1}
+.photorow .cam{max-width:none;padding:9px}
+#f-pv{width:84px;height:84px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:var(--parch2);flex:none}
+#pv{width:110px;height:110px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);display:block;margin:6px auto 10px;background:var(--parch2)}
+.radio{display:flex;gap:14px;font-size:.85rem;margin:4px 0 6px}
+.radio label{display:flex;align-items:center;gap:5px;margin:0}
+.radio input{width:auto}
+
+#toast{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+  background:var(--dark);color:var(--gold2);padding:10px 20px;border-radius:20px;font-size:.85rem;z-index:999;
+  opacity:0;transition:.3s;pointer-events:none;border:1px solid var(--gold);white-space:nowrap}
+#toast.show{opacity:1}
+#loading{position:fixed;inset:0;z-index:900;background:var(--dark);color:var(--gold2);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:12px}
+.spin{width:38px;height:38px;border:4px solid rgba(196,146,14,.3);border-top-color:var(--gold);border-radius:50%;animation:s .8s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+#fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:95;width:54px;height:54px;border-radius:50%;
+  background:var(--gold);color:var(--dark);border:none;font-size:1.8rem;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer;display:none}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spin"></div><div>Loading the Engracia family…</div></div>
+
+<header><div class="bar">
+  <h1>⚜ ENGRACIA FAMILY TREE</h1>
+  <button id="btn-login">🔑 Login</button>
+  <button id="btn-logout" style="display:none">Logout</button>
+</div></header>
+
+<div class="toolbar">
+  <input id="q" placeholder="🔍 Search a name…" autocomplete="off">
+  <button class="tb" id="exp-all">⊞ <span>Expand all</span></button>
+  <button class="tb" id="col-all">⊟ <span>Collapse</span></button>
+  <div class="view-toggle">
+    <button class="tb" id="v-story">📜 <span>Story</span></button>
+    <button class="tb on" id="v-list">☰ <span>List</span></button>
+    <button class="tb" id="v-chart">⌬ <span>Chart</span></button>
+  </div>
+</div>
+
+<div class="chips" id="chips"></div>
+<div id="intro">
+  <div class="intro-card">
+    <div class="intro-kicker">The root of the Engracia family</div>
+    <p>In the third quarter of the 17th century an Ottoman missionary and trader, <b>Esau Ozal</b>, sailed from Istanbul to Borneo, married <b>Lileni Mali</b> of Tawi-Tawi, and settled in Zamboanga. Their four orphaned children — renamed <b>Engracia</b> by a Spanish parish priest — became the root of every branch on this tree.</p>
+    <div class="intro-actions">
+      <button class="tb" onclick="setView('story')">📜 Read the full story</button>
+      <span class="intro-src">by Dr. Solfe T. Engracia Fpoima · as related by Eleuterio T. Engracia · 2026 revision by Ray Engracia Sitchon</span>
+    </div>
+  </div>
+</div>
+<div id="tree"></div>
+<article id="story">
+  <div class="title-page">
+    <div class="tp-rule"></div>
+    <h1>ESAU OZAL</h1>
+    <h2>A Missionary of Islam from Turkey during the 17th Century<br>is the Root of the Engracia Family</h2>
+    <div class="tp-rule"></div>
+    <p class="tp-by">by<br><b>Dr. Solfe T. Engracia Fpoima</b><br>Asst. Medical Director, MSU Medical Services &amp; Hospital<br>Mindanao State University, Marawi City</p>
+    <p class="tp-by">As related to him by<br><b>Eleuterio T. Engracia</b><br>Grandfather of Dr. Ahmad E. Alonto Jr., Former MSU President</p>
+    <p class="tp-by">© 2026 Revision by <b>Ray Engracia Sitchon</b></p>
+    <div class="tp-rule"></div>
+  </div>
+
+  <h3>The mission to the Far East</h3>
+  <p>During the third quarter of the 17th century the Supreme Head of the Council for Islamic Affairs under the Ottoman Empire made a plan to send groups of traders, who were at the same time Muslim missionaries, to the Far East to spread the Islamic faith. After months of deliberation two groups were selected for the task, with fifteen men in each. Their voyage took almost a year by sea: from Istanbul through the Mediterranean, down the western and southern coasts of Africa, around the Cape of Good Hope, across the Indian Ocean and through the Strait of Malacca, until they reached the island of Borneo. One group landed on the western side — today's Sarawak, Brunei and Kota Kinabalu — while the other went on to the east, to what are now Sandakan, Kudat and Tawau. Borneo was then a virgin land of countless plants, birds and wild animals, and travel was almost entirely by sea.</p>
+  <p>One member of the expedition was a young, dashing, adventurous man named <b>ESAU OZAL</b>, leader of the team assigned to eastern Borneo. He was not only a missionary but an expert trader, for the groups had to support themselves financially in their work.</p>
+
+  <h3>Lileni Mali of Tawi-Tawi</h3>
+  <p>Over many years of missionary travel he reached the islands of Tawi-Tawi — Sitangkai, Sibutu, Balabac — the Sulu Archipelago, Palawan, and as far as Zamboanga. On one of these journeys he met a charming lass from the islands of Tawi-Tawi named <b>Lileni Mali</b>. After a brief courtship they were married in the Muslim ceremonial tradition.</p>
+  <p>With his plans and vision for a family, Esau brought his wife to Zamboanga and settled there. Trade was prosperous: the goods he carried from Sandakan were in great demand among the local residents and the Spanish employees of the civil government. The family stayed in Zamboanga for a decade and had four children, three boys and a girl — <b>Faisal, Diamla, Istam</b> and <b>Sahala</b>, all surnamed Ozal. Lileni died giving birth to the youngest, Sahala, of a haemorrhage, and Esau became a widower at thirty-five.</p>
+
+  <h3>The blockade and the orphans</h3>
+  <p>He carried on his missionary work and trading between Zamboanga and Sandakan until Fort Pilar in Zamboanga was attacked by pirates<sup>1</sup> and other marauders — not once, but many times. The Spanish government responded by sealing the sea lane between Sandakan, Jolo and Zamboanga. The blockade ruined Esau's trade, and then came the misfortune that shaped the family: he was unable to return to Zamboanga, where his four children had been left behind. They never learned whether their father had died during the strict blockade of the Spanish Navy against native vessels crossing from Borneo and Jolo.</p>
+  <p>The orphans lived in poverty at the mercy of their neighbours. Faisal, the eldest, was barely ten when his mother died, and at twelve he was the breadwinner for his two brothers and his sister, doing whatever menial work he could find — until he was hired as a helper and assistant cook at the convent of the local Spanish parish priest, who took pity on him because his features were so different from the local <i>indios</i>.</p>
+
+  <h3>From Ozal to Engracia</h3>
+  <p>Diligent, cooperative and intelligent, Faisal became close to the priest, who made him a sacristan. It was then that he found in the Christian faith the "milk of human kindness" and forgiveness that had rescued him and his family from poverty. By this grace — <i>gracia</i> — and the blessings of God invoked by the Spanish priest, Faisal was given the name <b>Gracia</b>, later <b>Engracia</b>, before being educated at the parochial school by the civil authorities. So Faisal Ozal became <b>Fruto Engracia</b>, Diamla Ozal became <b>Dimas Engracia</b>, Istam Ozal became <b>Isaac Engracia</b>, and Sahala Ozal became <b>Salvadora Engracia</b>. Already fluent in Chavacano, they became fluent in Spanish as well. This was the next chapter of their lives: from the family name Ozal to the surname Engracia.</p>
+
+  <h3>Capitan Fruto Engracia</h3>
+  <p>Fruto was humble but intelligent — diligent, sincere, loyal and courageous — and on the priest's recommendation he was accepted into the Spanish army's Guardia Civil after an oral examination. While still a new recruit, bandits<sup>2</sup> again attacked Fort Pilar; Fruto and his company repelled them in hand-to-hand combat, and Corporal Fruto was promoted to Sergeant. In the encounters that followed with the "lawless elements"<sup>3</sup> his rise was phenomenal: within a year and a half he was Teniente (Lieutenant), and still a bachelor.</p>
+  <p>Meanwhile the Spanish forts of Misamis Oriental and Occidental, particularly Ozamis, were under constant attack by Moro raiders, and the Commandant and Governor asked Zamboanga for reinforcements. Fruto's company volunteered, and as head of the family he brought his two brothers and his sister with him. Two weeks after their arrival the Fort of Ozamis was attacked by a larger force of <i>juramentados</i>; Fruto and his men fought them on the beach with heavy casualties on both sides, more on the attackers, who withdrew. For this bravery Fruto was promoted to <b>Capitan</b> (Company Commander).</p>
+  <p>Tall, dark and handsome, the new Capitan was always invited to social gatherings — especially by the Spanish señoritas. At a party hosted by the Governor of the two Misamis provinces he was introduced, as an officer and a gentleman, to a beautiful pure-Spanish lady who had a crush on him. After almost a year they were married in a simple ceremony by the local parish priest: <b>Bruna "Banu" Garcines</b>, daughter of Governor Garcines, became the wife of Capitan Fruto Engracia. They were blessed with five children — <b>Bernandino</b> (Bandin), <b>Norberto</b> (Binto), <b>Eusebio</b> (Sebio), <b>Agustina</b> (Agut) and <b>Isabel</b> (Abe) — and from these five come all the branches of this tree.</p>
+  <p>The two brothers, Dimas and Isaac, as Spanish employees, were transferred to the Visayas and Luzon and never returned to Mindanao; there are Engracias today in Quezon Province (Mauban, Lucena City, Lucban), the Bicol region, Biliran and other provinces of Luzon who are their heirs. Salvadora, the youngest and only girl, married into the Villa family of Clarin, Misamis Occidental.</p>
+
+  <div class="story-notes">
+    <p><sup>1</sup> Zamboanga at that time was still part of the Sultanate of Sulu but colonised by Spain. This must be the reason the place was so often under attack — but the Spanish, for psychological-warfare purposes, branded the attackers as pirates and marauders.</p>
+    <p><sup>2</sup> Possibly Tausug forces under the Sultanate of Sulu.</p>
+    <p><sup>3</sup> Resistance and freedom fighters, like the <i>insurrectos</i> in Luzon, were considered "lawless elements" by the Spanish authorities.</p>
+  </div>
+
+  <h3>The original name of the family</h3>
+  <table class="rename">
+    <tr><th colspan="3">Esau Ozal &amp; Lileni Mali — children</th></tr>
+    <tr><td>Faisal Ozal</td><td>→</td><td>Fruto M. Engracia · m. Bruna Garcines</td></tr>
+    <tr><td>Diamla Ozal</td><td>→</td><td>Dimas M. Engracia · to the Visayas</td></tr>
+    <tr><td>Istam Ozal</td><td>→</td><td>Isaac M. Engracia · to Luzon</td></tr>
+    <tr><td>Sahala Ozal</td><td>→</td><td>Salvadora M. Engracia · m. Villa of Clarin</td></tr>
+  </table>
+  <p class="story-cta"><button class="tb" onclick="setView('list')">☰ Open the family tree</button></p>
+</article>
+<div id="chart"><div id="cinner"><svg id="csvg"></svg><div id="cnodes"></div></div>
+  <div id="czoom"><button id="cz-in">＋</button><button id="cz-fit">⊡</button><button id="cz-out">－</button></div></div>
+<button id="fab" title="Add person">+</button>
+
+<!-- Add / Edit -->
+<div class="ov" id="ov-edit"><div class="sheet">
+  <button class="x" data-close="ov-edit">✕</button>
+  <h2 id="ed-title">Add Person</h2>
+  <input type="hidden" id="f-id">
+  <div class="photorow">
+    <img id="f-pv" alt="">
+    <div class="camrow">
+      <button type="button" class="cam" data-cam="f-cam">📷 Take photo</button>
+      <button type="button" class="cam" data-cam="f-file">🖼 Gallery</button>
+    </div>
+    <input type="file" id="f-cam"  accept="image/*" capture="environment" hidden>
+    <input type="file" id="f-file" accept="image/*" hidden>
+    <input type="hidden" id="f-photo">
+  </div>
+  <label>Full name *</label><input id="f-name" placeholder="e.g. JUAN E. SITCHON">
+  <div class="g2">
+    <div><label>Nickname</label><input id="f-nick" placeholder='"Juanito"'></div>
+    <div><label>Birth name (if changed)</label><input id="f-born" placeholder="e.g. Faisal Ozal"></div>
+  </div>
+  <div class="g2">
+    <div><label>Gender</label><select id="f-gender"><option value="M">Male</option><option value="F">Female</option></select></div>
+    <div><label>Generation</label><input id="f-gen" placeholder="e.g. Gen 6"></div>
+  </div>
+  <div class="g2">
+    <div><label>Birth year</label><input id="f-by" placeholder="1995"></div>
+    <div><label>Death year</label><input id="f-dy" placeholder="blank if living"></div>
+  </div>
+  <div class="g2">
+    <div><label>Birthplace</label><input id="f-bp" placeholder="e.g. Zamboanga"></div>
+    <div><label>Occupation</label><input id="f-occ"></div>
+  </div>
+  <label>Notes</label><textarea id="f-notes"></textarea>
+  <label>Card style</label>
+  <select id="f-var"><option value="">Default</option><option value="founder">Founder (red)</option>
+    <option value="patriarch">Patriarch (gold)</option><option value="source">Source / Author (green)</option>
+    <option value="reviser">Reviser (blue)</option><option value="key">Key figure (teal)</option>
+    <option value="gen7">Youngest generation (purple)</option><option value="single">Single / childless</option></select>
+  <div class="g2">
+    <div><label>Child of (parent)</label><select id="f-parent"></select></div>
+    <div><label>Spouse of</label><select id="f-spouse"></select></div>
+  </div>
+  <div class="fa"><button class="b-save" id="ed-save">💾 Save</button><button class="b-cancel" data-close="ov-edit">Cancel</button></div>
+</div></div>
+
+<!-- Photo -->
+<div class="ov" id="ov-photo"><div class="sheet">
+  <button class="x" data-close="ov-photo">✕</button>
+  <h2>📷 Photo</h2>
+  <img id="pv" alt="">
+  <div class="camrow">
+    <button type="button" class="cam" data-cam="ph-cam">📷 Take photo</button>
+    <button type="button" class="cam" data-cam="ph-file">🖼 Gallery</button>
+  </div>
+  <input type="file" id="ph-cam"  accept="image/*" capture="environment" hidden>
+  <input type="file" id="ph-file" accept="image/*" hidden>
+  <label>…or paste an image URL</label><input id="ph-url" placeholder="https://…">
+  <label>Caption</label><input id="ph-cap" placeholder="e.g. circa 1950">
+  <div class="fa"><button class="b-save" id="ph-save">💾 Save</button>
+    <button class="b-cancel" id="ph-del" style="background:var(--red);color:#fff">Remove</button>
+    <button class="b-cancel" data-close="ov-photo">Cancel</button></div>
+</div></div>
+
+<!-- Login -->
+<div class="ov" id="ov-login"><div class="sheet" style="max-width:380px">
+  <button class="x" data-close="ov-login">✕</button>
+  <h2>🔑 Admin login</h2>
+  <p style="font-size:.82rem;color:var(--gray);margin-bottom:8px">Viewing is public. Log in to add, edit, or delete.</p>
+  <input type="password" id="pw" placeholder="Password">
+  <div class="err" id="pw-err"></div>
+  <div class="fa"><button class="b-save" id="pw-go">Login</button></div>
+</div></div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  CONFIG — paste your Apps Script Web App URL here
+// ═══════════════════════════════════════════════════════════
+const API_URL = 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+// LOCAL / OFFLINE MODE — used automatically while API_URL above is still the placeholder
+// (or when you open the page with ?local=1). Data lives in this browser's storage only.
+const LOCAL_PASSWORD = 'admin';   // ← password for local mode
+const LOCAL = API_URL.startsWith('YOUR_') || location.search.includes('local=1');
+
+// ── Seed data (same as Code.gs seedData) ──
+const SEED_VERSION=3; // bump when SEED_P/SEED_R change → local data upgrades itself
+const SEED_P=[["esau","ESAU OZAL","Turkish Missionary & Trader","Esau Ozal","M","Gen 1 · Root","c.1640","","Ottoman Empire missionary of Islam sent to the Far East in the 3rd quarter of the 17th century; expert business trader based at Sandakan and Zamboanga. Root ancestor of all Engracia.","founder"],["lileni","LILENI MALI","of Tawi-Tawi","","F","Gen 1 · Root","c.1645","c.1680","From the islands of Tawi-Tawi. Married Esau in Muslim ceremonial tradition; died in childbirth bearing Sahala.","founder"],["fruto","FRUTO M. ENGRACIA","Capitan, Guardia Civil","Faisal Ozal","M","Gen 2","c.1668","","Eldest son. Orphaned at 10, bread-winner at 12; kitchen helper then sacristan to the Spanish parish priest of Zamboanga, who gave the family the name Engracia. Joined the Guardia Civil, promoted Corporal → Sargento → Teniente → Capitan after repelling attacks on Fort Pilar and the Fort of Ozamis.","patriarch"],["bruna","BRUNA \"BANU\" GARCINES","","","F","Spouse","","","Pure Spanish lady; daughter of Governor Garcines of the two Misamis provinces. Met Capitan Fruto at a party hosted by her father.",""],["dimas","DIMAS M. ENGRACIA","","Diamla Ozal","M","Gen 2","c.1670","","Spanish employee; transferred to the Visayas, unable to return to Mindanao. Heirs in Biliran and the Visayas.",""],["isaac","ISAAC M. ENGRACIA","","Istam Ozal","M","Gen 2","c.1672","","Spanish employee; transferred to Luzon. Heirs in Quezon Province (Mauban, Lucena, Lukban) and Bicol.",""],["salvadora","SALVADORA M. ENGRACIA","Only daughter","Sahala Ozal","F","Gen 2","c.1675","","Youngest; her mother died giving birth to her. Became the wife of the Villa family of Clarin, Misamis Occidental.",""],["bernandino","BERNANDINO ENGRACIA","\"Bandin\"","","M","Gen 3","","","Eldest son of Capitan Fruto.","patriarch"],["custodia_kaamino","CUSTODIA KAAMINO","","","F","Spouse","","","",""],["norberto","NORBERTO ENGRACIA","\"Binto\"","","M","Gen 3","","","","patriarch"],["nene_carreon","NENE CARREON","","","F","Spouse","","","",""],["eusebio","EUSEBIO ENGRACIA","\"Sebio\"","","M","Gen 3","","","Largest branch — 11 children plus adopted Melanio.","patriarch"],["polonia_tambasal","POLONIA TAMBASAL","","","F","Spouse","","","",""],["agustina","AGUSTINA ENGRACIA","\"Agut\"","","F","Gen 3","","","Her children carry the Rosauro surname.","patriarch"],["victoriano_rosauro","VICTORIANO ROSAURO","","","M","Spouse","","","",""],["isabel","ISABEL ENGRACIA","\"Abe\"","","F","Gen 3","","","m. Bagaboyboy, then Dahunan. Childless.","single"],["isidoro","ISIDORO ENGRACIA","","","M","Gen 4","","","m. Cebedo. Two families — 13 children.",""],["cruz","CRUZ ENGRACIA","\"Nene\"","","F","Gen 4","","","m. Bagaboyboy.",""],["victor","VICTOR ENGRACIA","","","M","Gen 4","","","m. Gallego.",""],["timoteo","TIMOTEO ENGRACIA","","","M","Gen 4","","","m. Conol.",""],["segundo","SEGUNDO ENGRACIA","","","M","Gen 4","","","m. Paña.",""],["crispin","CRISPIN ENGRACIA","","","M","Gen 4","","","m. Mosqueda.",""],["ines","INES ENGRACIA","","","F","Gen 4","","","m. Serapion Pimentel. Children carry the Pimentel surname.",""],["tadeo","TADEO ENGRACIA","","","M","Gen 4","","","m. Jocson.",""],["eleuterio","ELEUTERIO ENGRACIA","Source of this history","","M","Gen 4","","","m. Mata. Related this entire family history to Dr. Solfe T. Engracia Fpoima. Grandfather of Dr. Ahmad E. Alonto Jr., former MSU President.","source"],["regina","REGINA ENGRACIA","","","F","Gen 4","","","m. Abanil.",""],["jose","JOSE ENGRACIA","","","M","Gen 4","","","m. Ramayrat, then Molato. 10 children.",""],["simona","SIMONA ENGRACIA","","","F","Gen 4","","","m. Aboy. Children carry the Aboy surname.",""],["rustico","RUSTICO ENGRACIA","","","M","Gen 4","","","m. Rodriguez, then Catan.",""],["felipe","FELIPE ENGRACIA","Author's father","","M","Gen 4","","","Father of Dr. Solfe T. Engracia Fpoima and of Adora Engracia Sitchon.","patriarch"],["soledad_tupas","SOLEDAD TUPAS","","","F","Spouse","","","Mother of the seven Felipe Engracia children.",""],["indelicia","INDELICIA ENGRACIA","","","F","Gen 4","","","m. Masip. Children carry the Masip surname.",""],["bern2","BERNANDINO ENGRACIA","son of Eusebio","","M","Gen 4","","","m. Alcos.",""],["cleto","CLETO ENGRACIA","","","M","Gen 4","","","m. Fernandez.",""],["generoso","GENEROSO ENGRACIA","","","M","Gen 4","","","m. Solosa.",""],["melanio","MELANIO ENGRACIA","adopted","","M","Gen 4","","","Adopted by Eusebio.","single"],["felisa","FELISA ENGRACIA ROSAURO","","","F","Gen 4","","","m. Gapor. Children carry the Gapor surname.",""],["encarnacion","ENCARNACION ENGRACIA ROSAURO","\"Tatong\"","","F","Gen 4","","","Single.","single"],["gonzalo","GONZALO ENGRACIA ROSAURO","","","M","Gen 4","","","m. Jocson. 12 children.",""],["cosme","COSME ENGRACIA ROSAURO","","","M","Gen 4","","","m. Bala.",""],["isidro","ISIDRO ENGRACIA ROSAURO","","","M","Gen 4","","","m. Real / Nillas.",""],["judith_engracia","JUDITH ENGRACIA","","","F","Gen 5","","","m. Romero",""],["custodia_engracia","CUSTODIA ENGRACIA","","","F","Gen 5","","","m. Sanciangco",""],["artemio_engracia","ARTEMIO ENGRACIA","","","M","Gen 5","","","m. Tuaño",""],["gregorio_engracia","GREGORIO ENGRACIA","","","M","Gen 5","","","m. Guerra",""],["isidoro_jr_engracia","ISIDORO JR. ENGRACIA","","","M","Gen 5","","","m. Lizo",""],["josefina_engracia","JOSEFINA ENGRACIA","","","F","Gen 5","","","m. Tudla",""],["lino_engracia","LINO ENGRACIA","","","M","Gen 5","","","Single.",""],["bonifacio_engracia","BONIFACIO ENGRACIA","","","M","Gen 5","","","m. Lomongo (Later children of Isidoro.)",""],["mercedes_engracia","MERCEDES ENGRACIA","","","F","Gen 5","","","m. Miñoza (Later children of Isidoro.)",""],["lydia_engracia","LYDIA ENGRACIA","","","F","Gen 5","","","m. Dacup (Later children of Isidoro.)",""],["clemen_engracia","CLEMEN ENGRACIA","","","F","Gen 5","","","m. Quinto (Later children of Isidoro.)",""],["bernardino_engracia","BERNARDINO ENGRACIA","","","M","Gen 5","","","(Later children of Isidoro.)",""],["isidoro_jr_engracia_2","ISIDORO JR. ENGRACIA","","","M","Gen 5","","","m. Atay (Later children of Isidoro.)",""],["agripina_engracia","AGRIPINA ENGRACIA","","","F","Gen 5","","","m. Remonte (Later children of Isidoro.)",""],["nestor_bagaboyboy","NESTOR BAGABOYBOY","","","M","Gen 5","","","",""],["aristeo_bagaboyboy","ARISTEO BAGABOYBOY","","","M","Gen 5","","","m. Barroga",""],["beatriz_bagaboyboy","BEATRIZ BAGABOYBOY","","","F","Gen 5","","","m. Bermejo",""],["filotea_bagaboyboy","FILOTEA BAGABOYBOY","","","F","Gen 5","","","m. Chiong",""],["emma_engracia","EMMA ENGRACIA","","","F","Gen 5","","","m. Laurel",""],["victor_jr_engracia","VICTOR JR. ENGRACIA","Melanio","","M","Gen 5","","","m. Sta. Cruz",""],["ina_engracia","INA ENGRACIA","","","F","Gen 5","","","m. Emphasis",""],["lino_engracia_2","LINO ENGRACIA","","","M","Gen 5","","","",""],["elisa_engracia","ELISA ENGRACIA","","","F","Gen 5","","","m. Pasok",""],["anita_engracia","ANITA ENGRACIA","","","F","Gen 5","","","m. Molina",""],["lourdes_engracia","LOURDES ENGRACIA","","","F","Gen 5","","","m. Rosendo",""],["alfredo_engracia","ALFREDO ENGRACIA","","","M","Gen 5","","","",""],["ruben_engracia","RUBEN ENGRACIA","","","M","Gen 5","","","m. Salvador",""],["pastor_engracia","PASTOR ENGRACIA","Arturo","","M","Gen 5","","","",""],["romeo_engracia","ROMEO ENGRACIA","","","M","Gen 5","","","",""],["timoteo_jr_engracia","TIMOTEO JR. ENGRACIA","","","M","Gen 5","","","",""],["marcita_engracia","MARCITA ENGRACIA","","","F","Gen 5","","","",""],["armenio_engracia","ARMENIO ENGRACIA","","","M","Gen 5","","","m. Castillo",""],["sosima_engracia","SOSIMA ENGRACIA","","","F","Gen 5","","","m. Ricote",""],["pura_engracia","PURA ENGRACIA","","","F","Gen 5","","","m. Agudo",""],["elizabeth_engracia","ELIZABETH ENGRACIA","","","F","Gen 5","","","m. Oree",""],["lily_engracia","LILY ENGRACIA","","","F","Gen 5","","","m. Figueroa",""],["nena_engracia","NENA ENGRACIA","","","F","Gen 5","","","",""],["sergio_engracia","SERGIO ENGRACIA","","","M","Gen 5","","","",""],["lolita_engracia","LOLITA ENGRACIA","","","F","Gen 5","","","",""],["david_engracia","DAVID ENGRACIA","","","M","Gen 5","","","m. Bongcawel, then Romanillos",""],["gaudiosa_engracia","GAUDIOSA ENGRACIA","","","F","Gen 5","","","m. Doremon",""],["rita_engracia","RITA ENGRACIA","","","F","Gen 5","","","m. Garrido",""],["placido_engracia","PLACIDO ENGRACIA","","","M","Gen 5","","","m. Villasin",""],["juanita_engracia","JUANITA ENGRACIA","","","F","Gen 5","","","m. Oliva",""],["oliva_engracia","OLIVA ENGRACIA","","","F","Gen 5","","","m. Pasio",""],["epitacia_engracia","EPITACIA ENGRACIA","","","F","Gen 5","","","m. Fabunan",""],["editha_engracia","EDITHA ENGRACIA","","","F","Gen 5","","","",""],["lina_engracia","LINA ENGRACIA","","","F","Gen 5","","","",""],["serapion_jr_pimentel","SERAPION JR. PIMENTEL","","","M","Gen 5","","","m. Lebaste",""],["demosthenes_pimentel","DEMOSTHENES PIMENTEL","","","M","Gen 5","","","m. Irag",""],["inesita_pimentel","INESITA PIMENTEL","","","F","Gen 5","","","m. Dago-on",""],["eduardo_pimentel","EDUARDO PIMENTEL","","","M","Gen 5","","","m. Emata",""],["libertad_pimentel","LIBERTAD PIMENTEL","","","F","Gen 5","","","m. Englebertsen",""],["perla_pimentel","PERLA PIMENTEL","","","F","Gen 5","","","m. Werner",""],["achilles_pimentel","ACHILLES PIMENTEL","","","M","Gen 5","","","m. Tugade",""],["plebescita_pimentel","PLEBESCITA PIMENTEL","","","F","Gen 5","","","",""],["ulysses_pimentel","ULYSSES PIMENTEL","","","M","Gen 5","","","m. Paña",""],["vivencio_engracia","VIVENCIO ENGRACIA","","","M","Gen 5","","","m. Suana",""],["apiceto_engracia","APICETO ENGRACIA","","","M","Gen 5","","","m. Ramos",""],["miguel_engracia","MIGUEL ENGRACIA","","","M","Gen 5","","","m. Milan",""],["cristeta_engracia","CRISTETA ENGRACIA","","","F","Gen 5","","","m. Garcia",""],["irene_engracia","IRENE ENGRACIA","","","F","Gen 5","","","m. Luansing",""],["buevenida_engracia","BUEVENIDA ENGRACIA","","","F","Gen 5","","","m. Alindugan",""],["alfredo_engracia_2","ALFREDO ENGRACIA","","","M","Gen 5","","","m. Calacat",""],["consolacion_engracia","CONSOLACION ENGRACIA","","","F","Gen 5","","","m. Alonto, then Fajardo. Mother of Dr. Ahmad E. Alonto Jr.",""],["alejandrino_engracia","ALEJANDRINO ENGRACIA","","","M","Gen 5","","","m. Albarracin",""],["casiano_engracia","CASIANO ENGRACIA","","","M","Gen 5","","","m. Generalao",""],["rodolfo_engracia","RODOLFO ENGRACIA","Buddy","","M","Gen 5","","","m. Sabaduquia",""],["cruz_engracia","CRUZ ENGRACIA","","","M","Gen 5","","","m. Akit",""],["baltazan_engracia","BALTAZAN ENGRACIA","","","M","Gen 5","","","m. Parojnog",""],["proserpina_engracia","PROSERPINA ENGRACIA","","","F","Gen 5","","","m. Bautista",""],["anita_engracia_2","ANITA ENGRACIA","","","F","Gen 5","","","m. Fernandez",""],["sergio_engracia_2","SERGIO ENGRACIA","","","M","Gen 5","","","",""],["balodoy_teoggenis_engracia","BALODOY TEOGGENIS ENGRACIA","","","M","Gen 5","","","m. Baron",""],["norma_engracia","NORMA ENGRACIA","","","F","Gen 5","","","m. Natinga",""],["carlos_engracia","CARLOS ENGRACIA","","","M","Gen 5","","","m. Dumon",""],["ester_engracia","ESTER ENGRACIA","","","F","Gen 5","","","m. Morgia",""],["inocencio_engracia","INOCENCIO ENGRACIA","","","M","Gen 5","","","",""],["aniceto_aboy","ANICETO ABOY","","","M","Gen 5","","","m. Salvation",""],["eliseo_aboy","ELISEO ABOY","","","M","Gen 5","","","m. Jabinez",""],["manuel_aboy","MANUEL ABOY","","","M","Gen 5","","","m. Maranon",""],["josefa_aboy","JOSEFA ABOY","","","F","Gen 5","","","m. Serra / Villanueva",""],["cita_aboy","CITA ABOY","","","F","Gen 5","","","Deceased.",""],["buenvenida_engracia","BUENVENIDA ENGRACIA","","","F","Gen 5","","","m. Patacsil",""],["rodolfo_engracia_2","RODOLFO ENGRACIA","","","M","Gen 5","","","m. Gumera",""],["edelisa_masip","EDELISA MASIP","","","F","Gen 5","","","m. Calapiz",""],["fenitha_masip","FENITHA MASIP","","","F","Gen 5","","","m. Saavedra",""],["severino_masip","SEVERINO MASIP","","","M","Gen 5","","","m. Tomatao",""],["george_masip","GEORGE MASIP","","","M","Gen 5","","","m. Aban",""],["victor_masip","VICTOR MASIP","","","M","Gen 5","","","",""],["emma_masip","EMMA MASIP","","","F","Gen 5","","","m. Yu",""],["luisito_masip","LUISITO MASIP","","","M","Gen 5","","","m. Delejiro",""],["carmen_engracia","CARMEN ENGRACIA","","","F","Gen 5","","","",""],["leonardo_engracia","LEONARDO ENGRACIA","","","M","Gen 5","","","",""],["nene_engracia","NENE ENGRACIA","","","F","Gen 5","","","",""],["reynaldo_engracia","REYNALDO ENGRACIA","","","M","Gen 5","","","m. Totor",""],["virginia_engracia","VIRGINIA ENGRACIA","","","F","Gen 5","","","m. Weller",""],["emmanuel_engracia","EMMANUEL ENGRACIA","","","M","Gen 5","","","",""],["clele_engracia","CLELE ENGRACIA","","","F","Gen 5","","","m. Suazo",""],["charlito_engracia","CHARLITO ENGRACIA","","","M","Gen 5","","","",""],["rogelio_engracia","ROGELIO ENGRACIA","","","M","Gen 5","","","",""],["dextor_engracia","DEXTOR ENGRACIA","","","M","Gen 5","","","",""],["norberto_engracia","NORBERTO ENGRACIA","","","M","Gen 5","","","",""],["regina_engracia","REGINA ENGRACIA","","","F","Gen 5","","","",""],["gene_engracia","GENE ENGRACIA","","","M","Gen 5","","","m. Corpuz",""],["belen_engracia","BELEN ENGRACIA","","","F","Gen 5","","","m. Alcayra",""],["venus_engracia","VENUS ENGRACIA","","","F","Gen 5","","","m. Perito",""],["jupiter_engracia","JUPITER ENGRACIA","","","M","Gen 5","","","",""],["efren_engracia","EFREN ENGRACIA","","","M","Gen 5","","","m. Muñoz",""],["ruby_engracia","RUBY ENGRACIA","","","F","Gen 5","","","m. Mamoko",""],["mars_engracia","MARS ENGRACIA","","","M","Gen 5","","","m. Corpis",""],["francisco_engracia","FRANCISCO ENGRACIA","","","M","Gen 5","","","",""],["carlos_engracia_2","CARLOS ENGRACIA","","","M","Gen 5","","","",""],["panfilo_rosauro","PANFILO ROSAURO","Nelson","","M","Gen 5","","","m. Emphasis",""],["alfonso_rosauro","ALFONSO ROSAURO","","","M","Gen 5","","","",""],["pamela_rosauro","PAMELA ROSAURO","","","F","Gen 5","","","m. Rosales",""],["erlinda_rosauro","ERLINDA ROSAURO","","","F","Gen 5","","","m. Ferraren",""],["remedios_rosauro","REMEDIOS ROSAURO","","","F","Gen 5","","","m. Borje",""],["gonzalo_jr_rosauro","GONZALO JR. ROSAURO","","","M","Gen 5","","","m. Azcona",""],["jose_rosauro","JOSE ROSAURO","","","M","Gen 5","","","m. Lim",""],["pedrita_rosauro","PEDRITA ROSAURO","","","F","Gen 5","","","",""],["magildo_rosauro","MAGILDO ROSAURO","","","M","Gen 5","","","",""],["lolita_rosauro","LOLITA ROSAURO","","","F","Gen 5","","","m. Bogo",""],["cecilia_rosauro","CECILIA ROSAURO","","","F","Gen 5","","","m. Kaamino",""],["neva_rosauro","NEVA ROSAURO","","","F","Gen 5","","","m. Bascon",""],["amy_rosauro","AMY ROSAURO","","","F","Gen 5","","","m. Jumao-as",""],["juanillo_rosauro","JUANILLO ROSAURO","","","M","Gen 5","","","m. Malindang",""],["enrico_rosauro","ENRICO ROSAURO","","","M","Gen 5","","","m. Angoren",""],["willy_rosauro","WILLY ROSAURO","","","M","Gen 5","","","m. Roxas",""],["zenaida_rosauro","ZENAIDA ROSAURO","","","F","Gen 5","","","m. Wilkins",""],["frano_gapor","FRANO GAPOR","","","M","Gen 5","","","",""],["conchita_gapor","CONCHITA GAPOR","","","F","Gen 5","","","m. Arong",""],["julieta_gapor","JULIETA GAPOR","","","F","Gen 5","","","m. Acapulco",""],["patterson_gapor","PATTERSON GAPOR","","","M","Gen 5","","","",""],["luz_rosauro","LUZ ROSAURO","","","F","Gen 5","","","",""],["benjamin_rosauro","BENJAMIN ROSAURO","","","M","Gen 5","","","",""],["soni","SONI ENGRACIA","","","F","Gen 5","","","",""],["socrates_aquino","SOCRATES AQUINO","","","M","Spouse","","","",""],["solfe","SOLFE T. ENGRACIA","Dr. Solfe T. Engracia Fpoima","","M","Gen 5","","","Author of this family history. Asst. Medical Director, MSU Medical Services & Hospital, Mindanao State University, Marawi City. 10 children.","source"],["mercedes_de_asis","MERCEDES DE ASIS","","","F","Spouse","","","",""],["constitution","CONSTITUTION ENGRACIA","","","F","Gen 5","","","",""],["marciano_escol","MARCIANO ESCOL","","","M","Spouse","","","",""],["engracia_t","ENGRACIA T. ENGRACIA","","","F","Gen 5","","","",""],["leonardo_go","LEONARDO GO","","","M","Spouse","","","",""],["don_felipe","DON FELIPE ENGRACIA","Felipe Jr.","","M","Gen 5","","","",""],["letecia_agduma","LETECIA AGDUMA","","","F","Spouse","","","",""],["warfe","WARFE ENGRACIA","","","M","Gen 5","","","Married twice.",""],["ruth_spears","RUTH SPEARS","","","F","Spouse","","","First wife; mother of Christine and Jasmine.",""],["eleine_pedrosa","ELEINE PEDROSA","","","F","Spouse","","","Second wife; mother of Athenia and Joshua Christopher.",""],["adora","ADORA ENGRACIA","Ray's mother","","F","Gen 5","","","Mother of the 2026 reviser of this document.","patriarch"],["sergio_sitchon","SERGIO SITCHON","","","M","Spouse","","","",""],["ahmad_e_alonto_jr","AHMAD E. ALONTO JR.","Dr. · Former MSU President","","M","Gen 6","","","Grandson of Eleuterio Engracia. Former President of Mindanao State University.","source"],["elmo_e_aquino","ELMO E. AQUINO","","","M","Gen 6","","","",""],["golden_eva_e_aquino","GOLDEN EVA E. AQUINO","","","F","Gen 6","","","",""],["michael_e_aquino","MICHAEL E. AQUINO","","","M","Gen 6","","","",""],["antonio_de_asis_engracia","ANTONIO DE ASIS ENGRACIA","","","M","Gen 6","","","",""],["patria_de_asis_engracia","PATRIA DE ASIS ENGRACIA","","","F","Gen 6","","","",""],["edgardo_padiang","EDGARDO PADIANG","","","M","Spouse","","","Surname also written Badiang in the source.",""],["armi_a_engracia","ARMI A. ENGRACIA","","","F","Gen 6","","","",""],["alain_chua","ALAIN CHUA","","","M","Spouse","","","",""],["riza_mae_engracia","RIZA MAE ENGRACIA","","","F","Gen 6","","","",""],["joselito_a_engracia","JOSELITO A. ENGRACIA","","","M","Gen 6","","","",""],["apollo_samuel_a_engracia","APOLLO SAMUEL A. ENGRACIA","","","M","Gen 6","","","",""],["van_cliburn_a_engracia","VAN CLIBURN A. ENGRACIA","","","M","Gen 6","","","",""],["sol_d_engracia","SOL D. ENGRACIA","","","F","Gen 6","","","",""],["solfe_t_jr_engracia","SOLFE T. JR. ENGRACIA","","","M","Gen 6","","","",""],["jacqueline_engracia","JACQUELINE ENGRACIA","","","F","Gen 6","","","",""],["eurica_a_engracia","EURICA A. ENGRACIA","","","F","Gen 6","","","Deceased.",""],["lemuel_e_escol","LEMUEL E. ESCOL","","","M","Gen 6","","","",""],["junife_e_escol","JUNIFE E. ESCOL","","","F","Gen 6","","","",""],["alvin_e_escol","ALVIN E. ESCOL","","","M","Gen 6","","","",""],["allan_e_escol","ALLAN E. ESCOL","","","M","Gen 6","","","",""],["neil_isidro_e_escol","NEIL ISIDRO E. ESCOL","","","M","Gen 6","","","",""],["cheche_escol","CHECHE ESCOL","","","F","Gen 6","","","",""],["junjun_escol","JUNJUN ESCOL","","","M","Gen 6","","","",""],["marilou_e_go","MARILOU E. GO","","","F","Gen 6","","","",""],["ralfer_e_go","RALFER E. GO","","","M","Gen 6","","","",""],["ofelia_e_go","OFELIA E. GO","","","F","Gen 6","","","",""],["rolando_e_go","ROLANDO E. GO","","","M","Gen 6","","","",""],["ramil_e_go","RAMIL E. GO","","","M","Gen 6","","","",""],["leonardo_e_jr_go","LEONARDO E. JR. GO","","","M","Gen 6","","","",""],["richard_e_go","RICHARD E. GO","","","M","Gen 6","","","",""],["roy_e_go","ROY E. GO","","","M","Gen 6","","","",""],["rico_e_go","RICO E. GO","","","M","Gen 6","","","",""],["maria_dolores_a_engracia","MARIA DOLORES A. ENGRACIA","","","F","Gen 6","","","",""],["marilou_engracia","MARILOU ENGRACIA","","","F","Gen 6","","","",""],["maria_teresa_a_engracia","MARIA TERESA A. ENGRACIA","Marites","","F","Gen 6","","","",""],["don_ramon_a_engracia","DON RAMON A. ENGRACIA","","","M","Gen 6","","","",""],["don_ernesto_a_engracia","DON ERNESTO A. ENGRACIA","Bongbong","","M","Gen 6","","","",""],["christine_s_engracia","CHRISTINE S. ENGRACIA","Tini","","F","Gen 6","","","",""],["jasmine_s_engracia","JASMINE S. ENGRACIA","Mimie","","F","Gen 6","","","",""],["athenia_p_engracia","ATHENIA P. ENGRACIA","","","F","Gen 6","","","",""],["joshua_christopher_p_engracia","JOSHUA CHRISTOPHER P. ENGRACIA","","","M","Gen 6","","","",""],["ray","RAY E. SITCHON","2026 Reviser","","M","Gen 6","","","Revised and updated this family document in 2026. CEO & Principal Engineer, NEXARCH Systems Engineering, Iligan City.","reviser"],["cyril_lacida_sitchon","CYRIL LACIDA SITCHON","","","F","Spouse","","","",""],["may","MAY E. SITCHON","","","F","Gen 6","","","","key"],["neil_anoba","NEIL ANOBA","","","M","Spouse","","","",""],["faye","FAYE E. SITCHON","","","F","Gen 6","","","","key"],["adrian_lacida","ADRIAN LACIDA","","","M","Spouse","","","",""],["sera","SERA E. SITCHON","","","F","Gen 6","","","","key"],["adser","ADSER E. SITCHON","","","M","Gen 6","","","","key"],["ethyl_sitchon","ETHYL SITCHON","","","F","Spouse","","","",""],["john_anthony_e_badiang","JOHN ANTHONY E. BADIANG","","","M","Gen 7","","","","gen7"],["eurica_melany_e_badiang","EURICA MELANY E. BADIANG","","","F","Gen 7","","","","gen7"],["edward_e_badiang","EDWARD E. BADIANG","Dodong","","M","Gen 7","","","","gen7"],["eji_e_chua","EJI E. CHUA","","","M","Gen 7","","","","gen7"],["arabbellah","ARABBELLAH LACIDA SITCHON","","","F","Gen 7","","","","gen7"],["gio","GIO SITCHON ANOBA","","","M","Gen 7","","","","gen7"],["gian","GIAN SITCHON ANOBA","","","M","Gen 7","","","","gen7"],["riane","ADRIANE RIANE SITCHON LACIDA","","","F","Gen 7","","","","gen7"],["lala","ADRIANE LALA SITCHON LACIDA","","","F","Gen 7","","","","gen7"],["andres","ANDRES SITCHON LACIDA","","","M","Gen 7","","","","gen7"]];
+const SEED_R=[["esau","lileni","s"],["esau","fruto","p"],["fruto","bruna","s"],["esau","dimas","p"],["esau","isaac","p"],["esau","salvadora","p"],["fruto","bernandino","p"],["bernandino","custodia_kaamino","s"],["fruto","norberto","p"],["norberto","nene_carreon","s"],["fruto","eusebio","p"],["eusebio","polonia_tambasal","s"],["fruto","agustina","p"],["agustina","victoriano_rosauro","s"],["fruto","isabel","p"],["bernandino","isidoro","p"],["bernandino","cruz","p"],["norberto","victor","p"],["norberto","timoteo","p"],["norberto","segundo","p"],["norberto","crispin","p"],["norberto","ines","p"],["eusebio","tadeo","p"],["eusebio","eleuterio","p"],["eusebio","regina","p"],["eusebio","jose","p"],["eusebio","simona","p"],["eusebio","rustico","p"],["eusebio","felipe","p"],["felipe","soledad_tupas","s"],["eusebio","indelicia","p"],["eusebio","bern2","p"],["eusebio","cleto","p"],["eusebio","generoso","p"],["eusebio","melanio","p"],["agustina","felisa","p"],["agustina","encarnacion","p"],["agustina","gonzalo","p"],["agustina","cosme","p"],["agustina","isidro","p"],["isidoro","judith_engracia","p"],["isidoro","custodia_engracia","p"],["isidoro","artemio_engracia","p"],["isidoro","gregorio_engracia","p"],["isidoro","isidoro_jr_engracia","p"],["isidoro","josefina_engracia","p"],["isidoro","lino_engracia","p"],["isidoro","bonifacio_engracia","p"],["isidoro","mercedes_engracia","p"],["isidoro","lydia_engracia","p"],["isidoro","clemen_engracia","p"],["isidoro","bernardino_engracia","p"],["isidoro","isidoro_jr_engracia_2","p"],["isidoro","agripina_engracia","p"],["cruz","nestor_bagaboyboy","p"],["cruz","aristeo_bagaboyboy","p"],["cruz","beatriz_bagaboyboy","p"],["cruz","filotea_bagaboyboy","p"],["victor","emma_engracia","p"],["victor","victor_jr_engracia","p"],["victor","ina_engracia","p"],["victor","lino_engracia_2","p"],["timoteo","elisa_engracia","p"],["timoteo","anita_engracia","p"],["timoteo","lourdes_engracia","p"],["timoteo","alfredo_engracia","p"],["timoteo","ruben_engracia","p"],["timoteo","pastor_engracia","p"],["timoteo","romeo_engracia","p"],["timoteo","timoteo_jr_engracia","p"],["timoteo","marcita_engracia","p"],["segundo","armenio_engracia","p"],["segundo","sosima_engracia","p"],["segundo","pura_engracia","p"],["segundo","elizabeth_engracia","p"],["segundo","lily_engracia","p"],["segundo","nena_engracia","p"],["segundo","sergio_engracia","p"],["segundo","lolita_engracia","p"],["crispin","david_engracia","p"],["crispin","gaudiosa_engracia","p"],["crispin","rita_engracia","p"],["crispin","placido_engracia","p"],["crispin","juanita_engracia","p"],["crispin","oliva_engracia","p"],["crispin","epitacia_engracia","p"],["crispin","editha_engracia","p"],["crispin","lina_engracia","p"],["ines","serapion_jr_pimentel","p"],["ines","demosthenes_pimentel","p"],["ines","inesita_pimentel","p"],["ines","eduardo_pimentel","p"],["ines","libertad_pimentel","p"],["ines","perla_pimentel","p"],["ines","achilles_pimentel","p"],["ines","plebescita_pimentel","p"],["ines","ulysses_pimentel","p"],["tadeo","vivencio_engracia","p"],["tadeo","apiceto_engracia","p"],["tadeo","miguel_engracia","p"],["tadeo","cristeta_engracia","p"],["tadeo","irene_engracia","p"],["eleuterio","buevenida_engracia","p"],["eleuterio","alfredo_engracia_2","p"],["eleuterio","consolacion_engracia","p"],["eleuterio","alejandrino_engracia","p"],["eleuterio","casiano_engracia","p"],["eleuterio","rodolfo_engracia","p"],["jose","cruz_engracia","p"],["jose","baltazan_engracia","p"],["jose","proserpina_engracia","p"],["jose","anita_engracia_2","p"],["jose","sergio_engracia_2","p"],["jose","balodoy_teoggenis_engracia","p"],["jose","norma_engracia","p"],["jose","carlos_engracia","p"],["jose","ester_engracia","p"],["jose","inocencio_engracia","p"],["simona","aniceto_aboy","p"],["simona","eliseo_aboy","p"],["simona","manuel_aboy","p"],["simona","josefa_aboy","p"],["simona","cita_aboy","p"],["rustico","buenvenida_engracia","p"],["rustico","rodolfo_engracia_2","p"],["indelicia","edelisa_masip","p"],["indelicia","fenitha_masip","p"],["indelicia","severino_masip","p"],["indelicia","george_masip","p"],["indelicia","victor_masip","p"],["indelicia","emma_masip","p"],["indelicia","luisito_masip","p"],["bern2","carmen_engracia","p"],["bern2","leonardo_engracia","p"],["bern2","nene_engracia","p"],["cleto","reynaldo_engracia","p"],["cleto","virginia_engracia","p"],["cleto","emmanuel_engracia","p"],["cleto","clele_engracia","p"],["cleto","charlito_engracia","p"],["cleto","rogelio_engracia","p"],["cleto","dextor_engracia","p"],["cleto","norberto_engracia","p"],["cleto","regina_engracia","p"],["generoso","gene_engracia","p"],["generoso","belen_engracia","p"],["generoso","venus_engracia","p"],["generoso","jupiter_engracia","p"],["generoso","efren_engracia","p"],["generoso","ruby_engracia","p"],["generoso","mars_engracia","p"],["melanio","francisco_engracia","p"],["melanio","carlos_engracia_2","p"],["gonzalo","panfilo_rosauro","p"],["gonzalo","alfonso_rosauro","p"],["gonzalo","pamela_rosauro","p"],["gonzalo","erlinda_rosauro","p"],["gonzalo","remedios_rosauro","p"],["gonzalo","gonzalo_jr_rosauro","p"],["gonzalo","jose_rosauro","p"],["gonzalo","pedrita_rosauro","p"],["gonzalo","magildo_rosauro","p"],["gonzalo","lolita_rosauro","p"],["gonzalo","cecilia_rosauro","p"],["gonzalo","neva_rosauro","p"],["cosme","amy_rosauro","p"],["cosme","juanillo_rosauro","p"],["cosme","enrico_rosauro","p"],["cosme","willy_rosauro","p"],["cosme","zenaida_rosauro","p"],["felisa","frano_gapor","p"],["felisa","conchita_gapor","p"],["felisa","julieta_gapor","p"],["felisa","patterson_gapor","p"],["isidro","luz_rosauro","p"],["isidro","benjamin_rosauro","p"],["felipe","soni","p"],["soni","socrates_aquino","s"],["felipe","solfe","p"],["solfe","mercedes_de_asis","s"],["felipe","constitution","p"],["constitution","marciano_escol","s"],["felipe","engracia_t","p"],["engracia_t","leonardo_go","s"],["felipe","don_felipe","p"],["don_felipe","letecia_agduma","s"],["felipe","warfe","p"],["warfe","ruth_spears","s"],["warfe","eleine_pedrosa","s"],["felipe","adora","p"],["adora","sergio_sitchon","s"],["consolacion_engracia","ahmad_e_alonto_jr","p"],["soni","elmo_e_aquino","p"],["soni","golden_eva_e_aquino","p"],["soni","michael_e_aquino","p"],["solfe","antonio_de_asis_engracia","p"],["solfe","patria_de_asis_engracia","p"],["patria_de_asis_engracia","edgardo_padiang","s"],["solfe","armi_a_engracia","p"],["armi_a_engracia","alain_chua","s"],["solfe","riza_mae_engracia","p"],["solfe","joselito_a_engracia","p"],["solfe","apollo_samuel_a_engracia","p"],["solfe","van_cliburn_a_engracia","p"],["solfe","sol_d_engracia","p"],["solfe","solfe_t_jr_engracia","p"],["solfe","jacqueline_engracia","p"],["solfe","eurica_a_engracia","p"],["constitution","lemuel_e_escol","p"],["constitution","junife_e_escol","p"],["constitution","alvin_e_escol","p"],["constitution","allan_e_escol","p"],["constitution","neil_isidro_e_escol","p"],["constitution","cheche_escol","p"],["constitution","junjun_escol","p"],["engracia_t","marilou_e_go","p"],["engracia_t","ralfer_e_go","p"],["engracia_t","ofelia_e_go","p"],["engracia_t","rolando_e_go","p"],["engracia_t","ramil_e_go","p"],["engracia_t","leonardo_e_jr_go","p"],["engracia_t","richard_e_go","p"],["engracia_t","roy_e_go","p"],["engracia_t","rico_e_go","p"],["don_felipe","maria_dolores_a_engracia","p"],["don_felipe","marilou_engracia","p"],["don_felipe","maria_teresa_a_engracia","p"],["don_felipe","don_ramon_a_engracia","p"],["don_felipe","don_ernesto_a_engracia","p"],["warfe","christine_s_engracia","p"],["warfe","jasmine_s_engracia","p"],["warfe","athenia_p_engracia","p"],["warfe","joshua_christopher_p_engracia","p"],["adora","ray","p"],["ray","cyril_lacida_sitchon","s"],["adora","may","p"],["may","neil_anoba","s"],["adora","faye","p"],["faye","adrian_lacida","s"],["adora","sera","p"],["adora","adser","p"],["adser","ethyl_sitchon","s"],["patria_de_asis_engracia","john_anthony_e_badiang","p"],["patria_de_asis_engracia","eurica_melany_e_badiang","p"],["patria_de_asis_engracia","edward_e_badiang","p"],["armi_a_engracia","eji_e_chua","p"],["ray","arabbellah","p"],["may","gio","p"],["may","gian","p"],["faye","riane","p"],["faye","lala","p"],["faye","andres","p"]];
+const LDB = {
+  key:'ft_local_db',
+  fresh(){ const now=new Date().toISOString();
+    const people=SEED_P.map(v=>({id:v[0],name:v[1],nickname:v[2],born_name:v[3],gender:v[4],generation:v[5],
+      birth_year:v[6],death_year:v[7],birth_place:'',occupation:'',notes:v[8],variant:v[9],created_at:now,updated_at:now}));
+    const relationships=SEED_R.map((v,i)=>({id:'rel_'+String(i+1).padStart(4,'0'),person_id:v[0],related_id:v[1],
+      relationship_type:v[2]==='s'?'spouse_of':'parent_of',notes:'',created_at:now}));
+    return {seedVersion:SEED_VERSION,people,relationships,photos:{},comments:[]}; },
+  load(){
+    let old=null; try{ old=JSON.parse(localStorage.getItem(this.key)); }catch(e){}
+    if(old&&old.people&&old.seedVersion===SEED_VERSION) return old;
+    // first run, or the built-in seed changed: rebuild from seed, keep what the user added
+    const db=this.fresh();
+    if(old&&old.people){
+      const seedIds=new Set(SEED_P.map(v=>v[0])), ids=new Set(db.people.map(x=>x.id));
+      old.people.forEach(x=>{ if(!seedIds.has(x.id)){ db.people.push(x); ids.add(x.id); } });
+      old.relationships.forEach(r=>{ if(ids.has(r.person_id)&&ids.has(r.related_id)&&!db.relationships.some(q=>q.person_id===r.person_id&&q.related_id===r.related_id&&q.relationship_type===r.relationship_type)) db.relationships.push(r); });
+      Object.assign(db.photos, old.photos||{}); db.comments=(old.comments||[]).filter(c=>ids.has(c.person_id));
+      setTimeout(()=>toast('Family data updated to the latest edition'),800);
+    }
+    this.save(db); return db; },
+  save(db){ try{ localStorage.setItem(this.key,JSON.stringify(db)); }catch(e){ toast('⚠ Browser storage full — use a smaller photo'); } },
+  uid(p){ return p+Math.random().toString(36).slice(2,10); },
+  async call(b){
+    const db=this.load(), now=new Date().toISOString();
+    const needAuth=!['getTree','login','checkSession','logout'].includes(b.action);
+    if(needAuth && b.token!=='local-session') return {ok:false,error:'Unauthorized'};
+    switch(b.action){
+      case 'getTree': return {ok:true,data:db};
+      case 'login': return b.password===LOCAL_PASSWORD?{ok:true,token:'local-session'}:{ok:false,error:'Invalid password.'};
+      case 'checkSession': return {ok:true,valid:b.token==='local-session'};
+      case 'logout': return {ok:true};
+      case 'addPerson': { const id=this.uid('p_'); db.people.push({...b,id,token:undefined,action:undefined,created_at:now,updated_at:now}); this.save(db); return {ok:true,id}; }
+      case 'updatePerson': { const p=db.people.find(x=>x.id===b.id); if(!p) return {ok:false,error:'Not found'};
+        Object.keys(b).forEach(k=>{ if(!['action','token','id','created_at'].includes(k)) p[k]=b[k]; }); p.updated_at=now; this.save(db); return {ok:true}; }
+      case 'deletePerson': db.people=db.people.filter(x=>x.id!==b.id);
+        db.relationships=db.relationships.filter(r=>r.person_id!==b.id&&r.related_id!==b.id); delete db.photos[b.id]; db.comments=(db.comments||[]).filter(c=>c.person_id!==b.id); this.save(db); return {ok:true};
+      case 'addRelationship': { const id=this.uid('rel_'); db.relationships.push({id,person_id:b.person_id,related_id:b.related_id,relationship_type:b.relationship_type,notes:'',created_at:now}); this.save(db); return {ok:true,id}; }
+      case 'deleteRelationship': db.relationships=db.relationships.filter(r=>r.id!==b.id); this.save(db); return {ok:true};
+      case 'setPhoto': db.photos[b.personId]={url:b.url,caption:b.caption||''}; this.save(db); return {ok:true};
+      case 'deletePhoto': delete db.photos[b.personId]; this.save(db); return {ok:true};
+      case 'addComment': { const id=this.uid('c_'); (db.comments=db.comments||[]).push({id,person_id:b.person_id,author:b.author||'',text:b.text,created_at:now}); this.save(db); return {ok:true,id}; }
+      case 'deleteComment': db.comments=(db.comments||[]).filter(c=>c.id!==b.id); this.save(db); return {ok:true};
+      default: return {ok:false,error:'Unknown action'};
+    }
+  }
+};
+
+const S = { people:[], rels:[], photos:{}, comments:{}, token:localStorage.getItem('ft_token')||null,
+  byId:{}, kids:{}, spouses:{}, parentOf:{}, spouseOnly:new Set(), roots:[], cur:null, open:new Set(), expanded:new Set(), view:'list' };
+
+// ── API ───────────────────────────────────────────────────
+async function api(body, method='POST'){
+  if(LOCAL) return LDB.call({...body,token:S.token||''});
+  try{
+    const r = method==='GET'
+      ? await fetch(API_URL+'?'+new URLSearchParams({action:body.action,token:S.token||''}))
+      : await fetch(API_URL,{method:'POST',body:JSON.stringify({...body,token:S.token||''})});
+    return await r.json();
+  }catch(e){ return {ok:false,error:'Network error — check API_URL'}; }
+}
+async function load(){
+  const r = await api({action:'getTree'},'GET');
+  if(!r.ok){ toast('⚠ '+r.error); return; }
+  S.people=r.data.people||[]; S.rels=r.data.relationships||[]; S.photos=r.data.photos||{};
+  S.comments={}; (r.data.comments||[]).forEach(c=>{ (S.comments[c.person_id]=S.comments[c.person_id]||[]).push(c); });
+  Object.values(S.comments).forEach(a=>a.sort((x,y)=>String(y.created_at).localeCompare(String(x.created_at))));
+  index();
+}
+function index(){
+  S.byId={}; S.kids={}; S.spouses={}; S.parentOf={};
+  S.people.forEach(p=>{S.byId[p.id]=p; S.kids[p.id]=[]; S.spouses[p.id]=[];});
+  S.rels.forEach(r=>{
+    if(!S.byId[r.person_id]||!S.byId[r.related_id]) return;
+    if(r.relationship_type==='parent_of'){ S.kids[r.person_id].push(r.related_id); S.parentOf[r.related_id]=r.person_id; }
+    if(r.relationship_type==='spouse_of'){ S.spouses[r.person_id].push(r.related_id); S.spouses[r.related_id].push(r.person_id); }
+  });
+  // spouse-only = no parent, no kids, but married to someone → drawn inline with partner
+  S.spouseOnly=new Set(S.people.filter(p=>!S.parentOf[p.id]&&!S.kids[p.id].length&&S.spouses[p.id].length).map(p=>p.id));
+  S.roots=S.people.filter(p=>!S.parentOf[p.id]&&!S.spouseOnly.has(p.id)).map(p=>p.id);
+}
+
+// ── INIT ──────────────────────────────────────────────────
+async function init(){
+  await load();
+  // default: open the trunk down to Gen 2
+  ['esau','fruto'].forEach(id=>S.expanded.add(id));
+  render(); renderChips();
+  if(!localStorage.getItem('ft_seen_story')){ try{localStorage.setItem('ft_seen_story','1');}catch(e){} setView('story'); }
+  if(LOCAL){ document.querySelector('.bar h1').insertAdjacentHTML('beforeend',' <span style="font-size:.6rem;background:var(--gold);color:var(--dark);padding:2px 6px;border-radius:8px;vertical-align:middle">LOCAL</span>'); }
+  document.getElementById('loading').style.display='none';
+  if(S.token){ const r=await api({action:'checkSession'}); setAuth(r.ok&&r.valid); }
+}
+
+// ── RENDER LIST ───────────────────────────────────────────
+function render(){
+  const q=document.getElementById('q').value.trim().toLowerCase();
+  const el=document.getElementById('tree'); el.innerHTML='';
+  if(q){
+    const hits=S.people.filter(p=>!S.spouseOnly.has(p.id)&&match(p,q));
+    if(!hits.length){ el.innerHTML='<p style="padding:20px;color:var(--gray)">No match.</p>'; return; }
+    hits.forEach(id=>el.appendChild(node(id.id,true)));
+    return;
+  }
+  S.roots.forEach(id=>el.appendChild(node(id,false)));
+  if(S.view==='chart') renderChart();
+}
+function match(p,q){ return [p.name,p.nickname,p.born_name,p.notes,p.generation].some(v=>(v||'').toLowerCase().includes(q)); }
+
+function node(id,flat){
+  const p=S.byId[id], kids=S.kids[id], ph=S.photos[id];
+  const d=document.createElement('div');
+  d.className='node v-'+(p.variant||'')+(S.expanded.has(id)&&!flat?' exp':'')+(S.open.has(id)?' open':'');
+  d.dataset.id=id;
+  const sp=S.spouses[id].map(s=>S.byId[s]).filter(Boolean);
+  const years=[p.birth_year,p.death_year].filter(Boolean).join(' – ');
+  d.innerHTML=`
+   <div class="row">
+     <div class="tog ${kids.length?'':'leaf'}">${S.expanded.has(id)?'−':'+'}</div>
+     ${ph&&ph.url?`<img class="pic" src="${esc(ph.url)}" loading="lazy" alt="">`:`<div class="pic">${avatar(p)}</div>`}
+     <div class="info">
+       <div class="nm">${esc(p.name)} ${p.nickname?`<small>${esc(p.nickname)}</small>`:''}</div>
+       <div class="meta">
+         ${p.generation?`<span>${esc(p.generation)}</span>`:''}
+         ${years?`<span>${esc(years)}</span>`:''}
+         ${sp.map(s=>`<span class="sp"><b>⚭</b> ${esc(s.name)}</span>`).join('')}
+       </div>
+     </div>
+     ${kids.length?`<span class="cnt">${kids.length} ${kids.length===1?'child':'children'}</span>`:''}
+     <button class="more" title="Details">ⓘ</button>
+   </div>
+   <div class="detail">
+     ${p.born_name?`<p><b>Born as:</b> ${esc(p.born_name)}</p>`:''}
+     ${p.occupation?`<p><b>Occupation:</b> ${esc(p.occupation)}</p>`:''}
+     ${S.parentOf[id]?`<p><b>Parent:</b> ${esc(S.byId[S.parentOf[id]].name)}</p>`:''}
+     ${sp.length?`<p><b>Spouse:</b> ${sp.map(s=>esc(s.name)+(s.notes?' — '+esc(s.notes):'')).join('; ')}</p>`:''}
+     ${p.birth_place?`<p><b>Birthplace:</b> ${esc(p.birth_place)}</p>`:''}
+     ${p.notes?`<p>${esc(p.notes)}</p>`:''}
+     ${ph&&ph.caption?`<p style="color:var(--gray)"><i>${esc(ph.caption)}</i></p>`:''}
+     ${!p.born_name&&!p.occupation&&!p.notes&&!sp.length?'<p style="color:var(--gray)">No further details recorded.</p>':''}
+     ${commentsHtml(id)}
+     <div class="acts admin" style="display:${S.token?'flex':'none'}">
+       <button class="b-edit" data-a="edit">✏ Edit</button>
+       <button class="b-photo" data-a="photo">📷 Photo</button>
+       <button class="b-child" data-a="child">＋ Add child</button>
+       <button class="b-child" data-a="spouse" style="background:var(--teal)">⚭ Add spouse</button>
+       <button class="b-del" data-a="del">🗑 Delete</button>
+     </div>
+   </div>
+   ${kids.length&&!flat?`<div class="kids">${''}</div>`:''}`;
+  if(kids.length&&!flat){ const k=d.querySelector(':scope > .kids'); kids.forEach(c=>k.appendChild(node(c,false))); }
+
+  const row=d.querySelector(':scope > .row');
+  row.onclick=e=>{
+    if(e.target.closest('.more')){ toggleSet(S.open,id); d.classList.toggle('open'); return; }
+    if(kids.length&&!flat){ toggleSet(S.expanded,id); d.classList.toggle('exp'); row.querySelector('.tog').textContent=S.expanded.has(id)?'−':'+'; }
+    else { toggleSet(S.open,id); d.classList.toggle('open'); }
+  };
+  d.querySelectorAll(':scope > .detail .acts button').forEach(b=>b.onclick=e=>{e.stopPropagation(); action(b.dataset.a,id);});
+  const cm=d.querySelector(':scope > .detail .cmts');
+  cm.querySelectorAll('.cdel').forEach(b=>b.onclick=e=>{e.stopPropagation(); delComment(b.dataset.cid,id);});
+  const post=cm.querySelector('.cpost'); if(post) post.onclick=e=>{e.stopPropagation(); postComment(id,cm);};
+  cm.querySelectorAll('input,textarea').forEach(i=>i.onclick=e=>e.stopPropagation());
+  return d;
+}
+function toggleSet(s,v){ s.has(v)?s.delete(v):s.add(v); }
+
+// ── CHIPS (jump to branch) ────────────────────────────────
+function renderChips(){
+  const c=document.getElementById('chips'); c.innerHTML='';
+  const picks=['esau','fruto','bernandino','norberto','eusebio','agustina','felipe','adora','ray'].filter(id=>S.byId[id]);
+  picks.forEach(id=>{
+    const b=document.createElement('button'); b.className='chip';
+    b.textContent=(S.byId[id].nickname&&S.byId[id].nickname.startsWith('"')?S.byId[id].nickname+' ':'')+short(S.byId[id].name);
+    b.onclick=()=>jump(id); c.appendChild(b);
+  });
+}
+function short(n){ return n.split(' ')[0]; }
+function jump(id){
+  document.getElementById('q').value=''; S.view='list'; setView('list');
+  let cur=id; while(cur){ S.expanded.add(cur); cur=S.parentOf[cur]; }
+  S.expanded.add(id); S.open.add(id);
+  render();
+  const n=document.querySelector(`.node[data-id="${id}"] > .row`);
+  if(n){ n.scrollIntoView({behavior:'smooth',block:'center'}); n.classList.add('hl'); setTimeout(()=>n.classList.remove('hl'),2500); }
+}
+
+// ── TOOLBAR ───────────────────────────────────────────────
+document.getElementById('q').oninput=render;
+document.getElementById('exp-all').onclick=()=>{S.people.forEach(p=>S.expanded.add(p.id)); render();};
+document.getElementById('col-all').onclick=()=>{S.expanded.clear(); S.open.clear(); S.expanded.add('esau'); render();};
+document.getElementById('v-list').onclick=()=>setView('list');
+document.getElementById('v-chart').onclick=()=>setView('chart');
+document.getElementById('v-story').onclick=()=>setView('story');
+function setView(v){
+  S.view=v;
+  ['list','chart','story'].forEach(k=>document.getElementById('v-'+k).classList.toggle('on',v===k));
+  document.getElementById('tree').style.display=v==='list'?'':'none';
+  document.getElementById('chips').style.display=v==='list'?'':'none';
+  document.getElementById('intro').style.display=v==='list'?'':'none';
+  document.getElementById('chart').classList.toggle('on',v==='chart');
+  document.getElementById('story').classList.toggle('on',v==='story');
+  document.getElementById('fab').style.display=(v==='list'&&S.token)?'block':'none';
+  if(v==='chart') renderChart();
+  if(v!=='chart') window.scrollTo({top:0});
+}
+
+// ── CHART VIEW ────────────────────────────────────────────
+const CW=140,CH=92,HG=14,VG=60;
+function renderChart(){
+  const pos={}; let x=20;
+  function place(id,y){
+    const k=S.kids[id];
+    if(!k.length){ pos[id]={x,y}; x+=CW+HG; return; }
+    const sx=x; k.forEach(c=>place(c,y+CH+VG)); const ex=x-HG;
+    pos[id]={x:(sx+ex-CW)/2,y};
+  }
+  S.roots.forEach(r=>place(r,20));
+  // place spouse-only beside partner
+  S.spouseOnly.forEach(id=>{ const p=S.spouses[id].find(s=>pos[s]); if(p) pos[id]={x:pos[p].x+CW+6,y:pos[p].y,sp:true}; });
+  let W=0,H=0; Object.values(pos).forEach(p=>{W=Math.max(W,p.x+CW+40);H=Math.max(H,p.y+CH+40);});
+  const svg=document.getElementById('csvg'); svg.setAttribute('width',W); svg.setAttribute('height',H);
+  let L='';
+  Object.keys(S.kids).forEach(pid=>{ if(!pos[pid]) return; const px=pos[pid].x+CW/2, py=pos[pid].y+CH, my=py+VG*.45;
+    S.kids[pid].forEach(c=>{ if(!pos[c]) return; const cx=pos[c].x+CW/2;
+      L+=`<path d="M${px} ${py} V${my} H${cx} V${pos[c].y}" fill="none" stroke="#8b4513" stroke-width="1.5"/>`; }); });
+  S.spouseOnly.forEach(id=>{ const p=S.spouses[id][0]; if(!pos[id]||!pos[p]) return;
+    L+=`<line x1="${pos[p].x+CW}" y1="${pos[p].y+CH/2}" x2="${pos[id].x}" y2="${pos[id].y+CH/2}" stroke="#c4920e" stroke-width="2" stroke-dasharray="4,3"/>`; });
+  svg.innerHTML=L;
+  const cn=document.getElementById('cnodes'); cn.innerHTML=''; cn.style.cssText=`position:absolute;top:0;left:0;width:${W}px;height:${H}px`;
+  Object.entries(pos).forEach(([id,p])=>{ const per=S.byId[id], ph=S.photos[id];
+    const w=document.createElement('div'); w.className='v-'+(per.variant||'');
+    w.innerHTML=`<div class="cnode" style="left:${p.x}px;top:${p.y}px"><div class="av">${ph&&ph.url?`<img src="${esc(ph.url)}">`:avatar(per)}</div>
+      <b>${esc(per.name)}</b><small>${esc(per.nickname||per.generation||'')}</small></div>`;
+    w.firstChild.onclick=()=>jump(id); cn.appendChild(w); });
+  S.chart={pos,W,H};
+  const ch=document.getElementById('chart');
+  if(!ch.dataset.init){ ch.dataset.init=1;
+    let dr=false,lx,ly;
+    ch.onmousedown=e=>{dr=true;lx=e.clientX;ly=e.clientY;}; ch.onmouseup=ch.onmouseleave=()=>dr=false;
+    ch.onmousemove=e=>{ if(!dr) return; ch.scrollLeft-=e.clientX-lx; ch.scrollTop-=e.clientY-ly; lx=e.clientX; ly=e.clientY; };
+    ch.onwheel=e=>{ if(e.ctrlKey){ e.preventDefault(); czoom(e.deltaY<0?1.15:.87); } };
+    document.getElementById('cz-in').onclick=()=>czoom(1.25);
+    document.getElementById('cz-out').onclick=()=>czoom(.8);
+    document.getElementById('cz-fit').onclick=cfit;
+  }
+  cfit();
+}
+S.cz=1;
+function czoom(f){ const ch=document.getElementById('chart'), cx=ch.scrollLeft+ch.clientWidth/2, cy=ch.scrollTop+ch.clientHeight/2;
+  S.cz=Math.min(2.5,Math.max(.15,S.cz*f)); applyCz(); ch.scrollLeft=cx*f-ch.clientWidth/2; ch.scrollTop=cy*f-ch.clientHeight/2; }
+function applyCz(){ const i=document.getElementById('cinner'); i.style.transform=`scale(${S.cz})`; i.style.width=S.chart.W*S.cz+'px'; i.style.height=S.chart.H*S.cz+'px'; }
+function cfit(){ const ch=document.getElementById('chart'); S.cz=Math.min(1,Math.max(.15,(ch.clientWidth-20)/S.chart.W)); applyCz();
+  // if too small to read, zoom to a readable level centred on the root instead
+  if(S.cz<.45){ S.cz=.6; applyCz(); const r=S.chart.pos[S.roots[0]]; if(r){ ch.scrollLeft=(r.x+CW/2)*S.cz-ch.clientWidth/2; ch.scrollTop=0; } }
+  else { ch.scrollLeft=0; ch.scrollTop=0; } }
+
+// ── AUTH ──────────────────────────────────────────────────
+function setAuth(v){
+  if(!v){ S.token=null; localStorage.removeItem('ft_token'); }
+  if(S.authed!==v){ S.authed=v; if(S.people.length) render(); }  // comment forms / admin controls are part of the rows
+  document.getElementById('btn-login').style.display=v?'none':'';
+  document.getElementById('btn-logout').style.display=v?'':'none';
+  document.getElementById('fab').style.display=v?'block':'none';
+  document.querySelectorAll('.acts.admin').forEach(a=>a.style.display=v?'flex':'none');
+}
+document.getElementById('btn-login').onclick=()=>{ document.getElementById('pw').value=''; document.getElementById('pw-err').textContent=''; openOv('ov-login'); setTimeout(()=>document.getElementById('pw').focus(),60); };
+document.getElementById('pw').onkeyup=e=>{ if(e.key==='Enter') document.getElementById('pw-go').click(); };
+document.getElementById('pw-go').onclick=async()=>{
+  const b=document.getElementById('pw-go'); b.textContent='…';
+  const r=await api({action:'login',password:document.getElementById('pw').value}); b.textContent='Login';
+  if(r.ok){ S.token=r.token; localStorage.setItem('ft_token',r.token); closeOv('ov-login'); setAuth(true); toast('✅ Logged in'); }
+  else document.getElementById('pw-err').textContent=r.error||'Login failed';
+};
+document.getElementById('btn-logout').onclick=async()=>{ await api({action:'logout'}); setAuth(false); toast('Logged out'); };
+
+// ── ACTIONS ───────────────────────────────────────────────
+function action(a,id){
+  if(a==='edit') openEdit(id);
+  if(a==='photo') openPhoto(id);
+  if(a==='child') openEdit(null,{parent:id});
+  if(a==='spouse') openEdit(null,{spouse:id});
+  if(a==='del') del(id);
+}
+document.getElementById('fab').onclick=()=>openEdit(null,{});
+
+function fillSelects(exclude){
+  const opts='<option value="">— none —</option>'+[...S.people].sort((a,b)=>a.name.localeCompare(b.name))
+    .filter(p=>p.id!==exclude).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  document.getElementById('f-parent').innerHTML=opts; document.getElementById('f-spouse').innerHTML=opts;
+}
+function openEdit(id,pre={}){
+  const p=id?S.byId[id]:{};
+  document.getElementById('ed-title').textContent=id?'Edit person':pre.parent?'Add child of '+S.byId[pre.parent].name:pre.spouse?'Add spouse of '+S.byId[pre.spouse].name:'Add person';
+  const v=(k,x)=>document.getElementById(k).value=x||'';
+  v('f-id',id); v('f-name',p.name); v('f-nick',p.nickname); v('f-born',p.born_name); v('f-gender',p.gender||'M');
+  v('f-gen',p.generation||(pre.parent?nextGen(S.byId[pre.parent].generation):pre.spouse?'Spouse':''));
+  v('f-by',p.birth_year); v('f-dy',p.death_year); v('f-occ',p.occupation); v('f-bp',p.birth_place); v('f-notes',p.notes); v('f-var',p.variant);
+  fillSelects(id);
+  v('f-parent',pre.parent||S.parentOf[id]||''); v('f-spouse',pre.spouse||(id&&S.spouses[id][0])||'');
+  v('f-photo',''); document.getElementById('f-pv').src=(id&&S.photos[id]&&S.photos[id].url)||'';
+  openOv('ov-edit');
+}
+function nextGen(g){ const m=/(\d+)/.exec(g||''); return m?'Gen '+(+m[1]+1):''; }
+
+document.getElementById('ed-save').onclick=async()=>{
+  const g=k=>document.getElementById(k).value.trim();
+  if(!g('f-name')) return toast('⚠ Name is required');
+  const id=g('f-id'), data={name:g('f-name').toUpperCase(),nickname:g('f-nick'),born_name:g('f-born'),gender:g('f-gender'),
+    generation:g('f-gen'),birth_year:g('f-by'),death_year:g('f-dy'),occupation:g('f-occ'),birth_place:g('f-bp'),notes:g('f-notes'),variant:g('f-var')};
+  const b=document.getElementById('ed-save'); b.textContent='Saving…';
+  let sid=id, r = id?await api({action:'updatePerson',id,...data}):await api({action:'addPerson',...data});
+  if(!r.ok){ b.textContent='💾 Save'; return toast('⚠ '+r.error); }
+  if(!id) sid=r.id;
+  // relationships
+  const par=g('f-parent'), sp=g('f-spouse');
+  const oldPar=S.parentOf[sid];
+  if(par!==(oldPar||'')){
+    if(oldPar){ const rel=S.rels.find(x=>x.relationship_type==='parent_of'&&x.person_id===oldPar&&x.related_id===sid); if(rel) await api({action:'deleteRelationship',id:rel.id}); }
+    if(par) await api({action:'addRelationship',person_id:par,related_id:sid,relationship_type:'parent_of'});
+  }
+  if(sp && !S.rels.some(x=>x.relationship_type==='spouse_of'&&((x.person_id===sid&&x.related_id===sp)||(x.person_id===sp&&x.related_id===sid))))
+    await api({action:'addRelationship',person_id:sid,related_id:sp,relationship_type:'spouse_of'});
+  // photo taken in the form → save it with the person
+  const photo=g('f-photo'); if(photo) await api({action:'setPhoto',personId:sid,url:photo,caption:''});
+  closeOv('ov-edit'); b.textContent='💾 Save';
+  await load(); if(par) S.expanded.add(par); S.open.add(sid); render(); setAuth(true); toast('✅ Saved');
+  setTimeout(()=>{ const n=document.querySelector(`.node[data-id="${sid}"] > .row`); if(n) n.scrollIntoView({behavior:'smooth',block:'center'}); },100);
+};
+
+async function del(id){
+  const p=S.byId[id], n=S.kids[id].length;
+  if(!confirm(`Delete ${p.name}?${n?`\n\nThis person has ${n} children — they will stay but become unlinked.`:''}`)) return;
+  const r=await api({action:'deletePerson',id});
+  if(!r.ok) return toast('⚠ '+r.error);
+  await load(); render(); setAuth(true); toast('Deleted');
+}
+
+// ── PHOTO ─────────────────────────────────────────────────
+function openPhoto(id){
+  S.cur=id; const ph=S.photos[id]||{};
+  document.getElementById('pv').src=ph.url||''; document.getElementById('ph-url').value=ph.url&&!ph.url.startsWith('data:')?ph.url:'';
+  document.getElementById('ph-cap').value=ph.caption||''; document.getElementById('ph-file').value='';
+  openOv('ov-photo');
+}
+document.getElementById('ph-url').oninput=e=>document.getElementById('pv').src=e.target.value;
+
+// Camera / gallery buttons just click their hidden file input
+document.querySelectorAll('.cam').forEach(b=>b.onclick=()=>document.getElementById(b.dataset.cam).click());
+
+// Shrink a captured photo to ≤800px JPEG (≈100 KB). Online it is saved as a file in Google Drive; local mode keeps it in the browser.
+function shrink(file){ return new Promise(res=>{
+  const img=new Image(); img.onload=()=>{
+    const s=Math.min(1,(LOCAL?400:800)/Math.max(img.width,img.height)), c=document.createElement('canvas');
+    c.width=Math.round(img.width*s); c.height=Math.round(img.height*s);
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    URL.revokeObjectURL(img.src); res(c.toDataURL('image/jpeg',.85));
+  }; img.src=URL.createObjectURL(file); }); }
+
+// Photo sheet inputs
+['ph-cam','ph-file'].forEach(id=>document.getElementById(id).onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return; e.target.value='';
+  const url=await shrink(f); document.getElementById('pv').src=url; document.getElementById('ph-url').value=url;
+});
+// Add/Edit form inputs
+['f-cam','f-file'].forEach(id=>document.getElementById(id).onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return; e.target.value='';
+  const url=await shrink(f); document.getElementById('f-pv').src=url; document.getElementById('f-photo').value=url;
+});
+document.getElementById('ph-save').onclick=async()=>{
+  const url=document.getElementById('ph-url').value.trim(); if(!url) return toast('⚠ Choose a photo first');
+  const r=await api({action:'setPhoto',personId:S.cur,url,caption:document.getElementById('ph-cap').value.trim()});
+  if(!r.ok) return toast('⚠ '+r.error);
+  closeOv('ov-photo'); await load(); render(); setAuth(true); toast(r.drive_file_id?'✅ Photo saved to Google Drive':'✅ Photo saved');
+};
+document.getElementById('ph-del').onclick=async()=>{
+  if(!confirm('Remove photo?')) return;
+  await api({action:'deletePhoto',personId:S.cur}); closeOv('ov-photo'); await load(); render(); setAuth(true); toast('Photo removed');
+};
+
+// ── COMMENTS / DATED NOTES ────────────────────────────────
+function fmtDate(iso){ const d=new Date(iso); return isNaN(d)?'':d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}); }
+function commentsHtml(id){
+  const list=S.comments[id]||[];
+  return `<div class="cmts">
+    <h4>📝 Notes &amp; comments${list.length?` <span>${list.length}</span>`:''}</h4>
+    ${list.map(c=>`<div class="cmt"><div class="ctext">${esc(c.text)}</div>
+      <div class="cmeta">${c.author?esc(c.author)+' · ':''}${fmtDate(c.created_at)}
+      ${S.token?`<button class="cdel" data-cid="${c.id}" title="Delete note">✕</button>`:''}</div></div>`).join('')}
+    ${!list.length&&!S.token?'<p class="cnone">No notes yet.</p>':''}
+    ${S.token?`<div class="cform">
+      <input class="cauthor" placeholder="Your name" value="${esc(localStorage.getItem('ft_author')||'')}">
+      <textarea class="cbody" placeholder="Add a note, memory, correction or source…"></textarea>
+      <button class="cpost">Post note</button></div>`:''}
+  </div>`;
+}
+async function postComment(id,cm){
+  const author=cm.querySelector('.cauthor').value.trim(), text=cm.querySelector('.cbody').value.trim();
+  if(!text) return toast('⚠ Write something first');
+  localStorage.setItem('ft_author',author);
+  const b=cm.querySelector('.cpost'); b.textContent='…';
+  const r=await api({action:'addComment',person_id:id,author,text});
+  if(!r.ok){ b.textContent='Post note'; return toast('⚠ '+r.error); }
+  await load(); S.open.add(id); render(); setAuth(true); toast('✅ Note added');
+}
+async function delComment(cid,pid){
+  if(!confirm('Delete this note?')) return;
+  const r=await api({action:'deleteComment',id:cid}); if(!r.ok) return toast('⚠ '+r.error);
+  await load(); S.open.add(pid); render(); setAuth(true); toast('Note deleted');
+}
+
+// ── OVERLAYS / UTILS ──────────────────────────────────────
+function openOv(id){ document.getElementById(id).classList.add('open'); }
+function closeOv(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeOv(b.dataset.close));
+document.querySelectorAll('.ov').forEach(o=>o.onclick=e=>{ if(e.target===o) o.classList.remove('open'); });
+let tt; function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),2600); }
+function esc(s){ return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function avatar(p){
+  const f=p.gender==='F', bg={founder:'#8b1a1a',patriarch:'#8b6914',reviser:'#1a3a6b',source:'#2e7d32',gen7:'#4a1a6b',key:'#0f5c5c'}[p.variant]||'#6b3a1f';
+  return `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="${bg}" opacity=".18"/>
+   <circle cx="24" cy="19" r="9" fill="#f1c6a0"/>${f?`<path d="M14 21 Q24 6 34 21 L34 26 Q24 20 14 26Z" fill="#3a1a00"/>`:`<path d="M15 18 Q24 9 33 18 L33 15 Q24 8 15 15Z" fill="#1a0a00"/>`}
+   <circle cx="21" cy="19" r="1.3" fill="#2c1a0e"/><circle cx="27" cy="19" r="1.3" fill="#2c1a0e"/>
+   <path d="M21 23 Q24 25.5 27 23" stroke="#b86a5a" stroke-width="1" fill="none"/>
+   <path d="M10 44 Q12 30 24 30 Q36 30 38 44Z" fill="${bg}" opacity=".55"/></svg>`;
+}
+init();
+</script>
+</body>
+</html>
