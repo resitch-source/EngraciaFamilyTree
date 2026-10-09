@@ -79,6 +79,18 @@ header{position:fixed;top:0;left:0;right:0;z-index:100;
   margin:-4px 0 0 36px;padding:10px 12px;font-size:.84rem;line-height:1.55}
 .node.open > .detail{display:block}
 .detail p{margin-bottom:5px}
+.fs{margin-top:12px;padding-top:8px;border-top:1px solid var(--gold2)}
+.fs-h{font-size:.8rem;color:var(--brown2);font-weight:bold;margin-bottom:4px}
+.fs-h small{font-weight:normal;color:var(--gray)}
+.rl{display:grid;gap:5px;margin-bottom:6px}
+.rl .ri{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e3d3ad;border-radius:5px;padding:5px 8px;font-size:.86rem}
+.rl .ri span{flex:1}
+.rl .ri .rx{background:none;border:none;color:var(--red);cursor:pointer;font-size:1rem;padding:0 4px}
+.rl .ri input{flex:1;padding:6px 8px;font-size:.84rem}
+.rl .ri input.k{flex:0 0 38%;font-weight:bold}
+.addrow{display:flex;gap:6px}
+.addrow select{flex:1}
+.addrow .tb,.fs>.tb{white-space:nowrap}
 .cmts{margin-top:10px;padding-top:8px;border-top:1px dashed #d9c290}
 .cmts h4{font-size:.8rem;color:var(--brown2);margin-bottom:6px}
 .cmts h4 span{background:var(--gold);color:var(--dark);border-radius:9px;padding:0 7px;font-size:.7rem}
@@ -186,6 +198,18 @@ header{position:fixed;top:0;left:0;right:0;z-index:100;
 .radio label{display:flex;align-items:center;gap:5px;margin:0}
 .radio input{width:auto}
 
+#map{height:min(55vh,420px);border:2px solid var(--gold);border-radius:8px;margin-top:8px;background:#e9e2d0}
+.maphint{font-size:.76rem;color:var(--gray);margin-top:6px}
+#map-results{display:grid;gap:4px;margin-top:6px}
+#map-results button{text-align:left;background:#fff;border:1px solid #e3d3ad;border-radius:5px;padding:6px 9px;font:inherit;font-size:.8rem;cursor:pointer}
+.latlng{font-size:.74rem;color:var(--gray);margin:-4px 0 6px}
+.addr .maplinks{display:inline-flex;gap:6px;margin-left:6px;vertical-align:middle}
+.addr .tb{font-size:.74rem;padding:4px 8px;text-decoration:none;display:inline-block}
+.trail{font-size:.8rem;color:var(--brown2);margin-bottom:6px;line-height:1.7}
+.trail .jl,.sibs .jl{color:var(--brown);text-decoration:none;border-bottom:1px dotted var(--gold)}
+.trail .sep{color:var(--gold);margin:0 3px}
+.trail .me{font-weight:bold;color:var(--dark);border:none}
+.leaflet-container{font:inherit}
 #toast{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
   background:var(--dark);color:var(--gold2);padding:10px 20px;border-radius:20px;font-size:.85rem;z-index:999;
   opacity:0;transition:.3s;pointer-events:none;border:1px solid var(--gold);white-space:nowrap}
@@ -316,16 +340,26 @@ header{position:fixed;top:0;left:0;right:0;z-index:100;
     <div><label>Birthplace</label><input id="f-bp" placeholder="e.g. Zamboanga"></div>
     <div><label>Occupation</label><input id="f-occ"></div>
   </div>
+  <label>Address</label>
+  <div class="addrow"><input id="f-addr" placeholder="Street, barangay, city…"><button type="button" class="tb" id="f-map-btn">📍 Pick on map</button></div>
+  <div id="f-latlng" class="latlng"></div>
+  <input type="hidden" id="f-lat"><input type="hidden" id="f-lng">
   <label>Notes</label><textarea id="f-notes"></textarea>
   <label>Card style</label>
   <select id="f-var"><option value="">Default</option><option value="founder">Founder (red)</option>
     <option value="patriarch">Patriarch (gold)</option><option value="source">Source / Author (green)</option>
     <option value="reviser">Reviser (blue)</option><option value="key">Key figure (teal)</option>
     <option value="gen7">Youngest generation (purple)</option><option value="single">Single / childless</option></select>
-  <div class="g2">
-    <div><label>Child of (parent)</label><select id="f-parent"></select></div>
-    <div><label>Spouse of</label><select id="f-spouse"></select></div>
-  </div>
+  <div class="fs"><div class="fs-h">Parents</div>
+    <div class="g2">
+      <div><label>Father</label><select id="f-father"></select></div>
+      <div><label>Mother</label><select id="f-mother"></select></div>
+    </div></div>
+  <div class="fs"><div class="fs-h">Spouses</div><div id="f-spouses" class="rl"></div>
+    <div class="addrow"><select id="f-spouse-add"></select><button type="button" class="tb" id="f-spouse-btn">+ Add spouse</button></div></div>
+  <div class="fs"><div class="fs-h">Other details <small>(any field you like — address, education, contact, date of marriage…)</small></div>
+    <div id="f-extra" class="rl"></div>
+    <button type="button" class="tb" id="f-extra-btn">+ Add a field</button></div>
   <div class="fa"><button class="b-save" id="ed-save">💾 Save</button><button class="b-cancel" data-close="ov-edit">Cancel</button></div>
 </div></div>
 
@@ -345,6 +379,17 @@ header{position:fixed;top:0;left:0;right:0;z-index:100;
   <div class="fa"><button class="b-save" id="ph-save">💾 Save</button>
     <button class="b-cancel" id="ph-del" style="background:var(--red);color:#fff">Remove</button>
     <button class="b-cancel" data-close="ov-photo">Cancel</button></div>
+</div></div>
+
+<!-- Map (pick or view) -->
+<div class="ov" id="ov-map"><div class="sheet" style="max-width:640px">
+  <button class="x" data-close="ov-map">✕</button>
+  <h2 id="map-title">📍 Pick a location</h2>
+  <div class="addrow" id="map-search-row"><input id="map-q" placeholder="Search a place or address (e.g. Buru-un, Iligan City)"><button type="button" class="tb" id="map-go">Search</button></div>
+  <div id="map-results"></div>
+  <div id="map"></div>
+  <p id="map-hint" class="maphint">Tap the map to drop the pin, drag the pin to adjust.</p>
+  <div class="fa" id="map-actions"><button class="b-save" id="map-use">✔ Use this location</button><button class="b-cancel" id="map-gps">📡 My location</button><button class="b-cancel" data-close="ov-map">Cancel</button></div>
 </div></div>
 
 <!-- Login -->
@@ -370,9 +415,9 @@ const LOCAL_PASSWORD = 'admin';   // ← password for local mode
 const LOCAL = API_URL.startsWith('YOUR_') || location.search.includes('local=1');
 
 // ── Seed data (same as Code.gs seedData) ──
-const SEED_VERSION=3; // bump when SEED_P/SEED_R change → local data upgrades itself
+const SEED_VERSION=4; // bump when SEED_P/SEED_R change → local data upgrades itself
 const SEED_P=[["esau","ESAU OZAL","Turkish Missionary & Trader","Esau Ozal","M","Gen 1 · Root","c.1640","","Ottoman Empire missionary of Islam sent to the Far East in the 3rd quarter of the 17th century; expert business trader based at Sandakan and Zamboanga. Root ancestor of all Engracia.","founder"],["lileni","LILENI MALI","of Tawi-Tawi","","F","Gen 1 · Root","c.1645","c.1680","From the islands of Tawi-Tawi. Married Esau in Muslim ceremonial tradition; died in childbirth bearing Sahala.","founder"],["fruto","FRUTO M. ENGRACIA","Capitan, Guardia Civil","Faisal Ozal","M","Gen 2","c.1668","","Eldest son. Orphaned at 10, bread-winner at 12; kitchen helper then sacristan to the Spanish parish priest of Zamboanga, who gave the family the name Engracia. Joined the Guardia Civil, promoted Corporal → Sargento → Teniente → Capitan after repelling attacks on Fort Pilar and the Fort of Ozamis.","patriarch"],["bruna","BRUNA \"BANU\" GARCINES","","","F","Spouse","","","Pure Spanish lady; daughter of Governor Garcines of the two Misamis provinces. Met Capitan Fruto at a party hosted by her father.",""],["dimas","DIMAS M. ENGRACIA","","Diamla Ozal","M","Gen 2","c.1670","","Spanish employee; transferred to the Visayas, unable to return to Mindanao. Heirs in Biliran and the Visayas.",""],["isaac","ISAAC M. ENGRACIA","","Istam Ozal","M","Gen 2","c.1672","","Spanish employee; transferred to Luzon. Heirs in Quezon Province (Mauban, Lucena, Lukban) and Bicol.",""],["salvadora","SALVADORA M. ENGRACIA","Only daughter","Sahala Ozal","F","Gen 2","c.1675","","Youngest; her mother died giving birth to her. Became the wife of the Villa family of Clarin, Misamis Occidental.",""],["bernandino","BERNANDINO ENGRACIA","\"Bandin\"","","M","Gen 3","","","Eldest son of Capitan Fruto.","patriarch"],["custodia_kaamino","CUSTODIA KAAMINO","","","F","Spouse","","","",""],["norberto","NORBERTO ENGRACIA","\"Binto\"","","M","Gen 3","","","","patriarch"],["nene_carreon","NENE CARREON","","","F","Spouse","","","",""],["eusebio","EUSEBIO ENGRACIA","\"Sebio\"","","M","Gen 3","","","Largest branch — 11 children plus adopted Melanio.","patriarch"],["polonia_tambasal","POLONIA TAMBASAL","","","F","Spouse","","","",""],["agustina","AGUSTINA ENGRACIA","\"Agut\"","","F","Gen 3","","","Her children carry the Rosauro surname.","patriarch"],["victoriano_rosauro","VICTORIANO ROSAURO","","","M","Spouse","","","",""],["isabel","ISABEL ENGRACIA","\"Abe\"","","F","Gen 3","","","m. Bagaboyboy, then Dahunan. Childless.","single"],["isidoro","ISIDORO ENGRACIA","","","M","Gen 4","","","m. Cebedo. Two families — 13 children.",""],["cruz","CRUZ ENGRACIA","\"Nene\"","","F","Gen 4","","","m. Bagaboyboy.",""],["victor","VICTOR ENGRACIA","","","M","Gen 4","","","m. Gallego.",""],["timoteo","TIMOTEO ENGRACIA","","","M","Gen 4","","","m. Conol.",""],["segundo","SEGUNDO ENGRACIA","","","M","Gen 4","","","m. Paña.",""],["crispin","CRISPIN ENGRACIA","","","M","Gen 4","","","m. Mosqueda.",""],["ines","INES ENGRACIA","","","F","Gen 4","","","m. Serapion Pimentel. Children carry the Pimentel surname.",""],["tadeo","TADEO ENGRACIA","","","M","Gen 4","","","m. Jocson.",""],["eleuterio","ELEUTERIO ENGRACIA","Source of this history","","M","Gen 4","","","m. Mata. Related this entire family history to Dr. Solfe T. Engracia Fpoima. Grandfather of Dr. Ahmad E. Alonto Jr., former MSU President.","source"],["regina","REGINA ENGRACIA","","","F","Gen 4","","","m. Abanil.",""],["jose","JOSE ENGRACIA","","","M","Gen 4","","","m. Ramayrat, then Molato. 10 children.",""],["simona","SIMONA ENGRACIA","","","F","Gen 4","","","m. Aboy. Children carry the Aboy surname.",""],["rustico","RUSTICO ENGRACIA","","","M","Gen 4","","","m. Rodriguez, then Catan.",""],["felipe","FELIPE ENGRACIA","Author's father","","M","Gen 4","","","Father of Dr. Solfe T. Engracia Fpoima and of Adora Engracia Sitchon.","patriarch"],["soledad_tupas","SOLEDAD TUPAS","","","F","Spouse","","","Mother of the seven Felipe Engracia children.",""],["indelicia","INDELICIA ENGRACIA","","","F","Gen 4","","","m. Masip. Children carry the Masip surname.",""],["bern2","BERNANDINO ENGRACIA","son of Eusebio","","M","Gen 4","","","m. Alcos.",""],["cleto","CLETO ENGRACIA","","","M","Gen 4","","","m. Fernandez.",""],["generoso","GENEROSO ENGRACIA","","","M","Gen 4","","","m. Solosa.",""],["melanio","MELANIO ENGRACIA","adopted","","M","Gen 4","","","Adopted by Eusebio.","single"],["felisa","FELISA ENGRACIA ROSAURO","","","F","Gen 4","","","m. Gapor. Children carry the Gapor surname.",""],["encarnacion","ENCARNACION ENGRACIA ROSAURO","\"Tatong\"","","F","Gen 4","","","Single.","single"],["gonzalo","GONZALO ENGRACIA ROSAURO","","","M","Gen 4","","","m. Jocson. 12 children.",""],["cosme","COSME ENGRACIA ROSAURO","","","M","Gen 4","","","m. Bala.",""],["isidro","ISIDRO ENGRACIA ROSAURO","","","M","Gen 4","","","m. Real / Nillas.",""],["judith_engracia","JUDITH ENGRACIA","","","F","Gen 5","","","m. Romero",""],["custodia_engracia","CUSTODIA ENGRACIA","","","F","Gen 5","","","m. Sanciangco",""],["artemio_engracia","ARTEMIO ENGRACIA","","","M","Gen 5","","","m. Tuaño",""],["gregorio_engracia","GREGORIO ENGRACIA","","","M","Gen 5","","","m. Guerra",""],["isidoro_jr_engracia","ISIDORO JR. ENGRACIA","","","M","Gen 5","","","m. Lizo",""],["josefina_engracia","JOSEFINA ENGRACIA","","","F","Gen 5","","","m. Tudla",""],["lino_engracia","LINO ENGRACIA","","","M","Gen 5","","","Single.",""],["bonifacio_engracia","BONIFACIO ENGRACIA","","","M","Gen 5","","","m. Lomongo (Later children of Isidoro.)",""],["mercedes_engracia","MERCEDES ENGRACIA","","","F","Gen 5","","","m. Miñoza (Later children of Isidoro.)",""],["lydia_engracia","LYDIA ENGRACIA","","","F","Gen 5","","","m. Dacup (Later children of Isidoro.)",""],["clemen_engracia","CLEMEN ENGRACIA","","","F","Gen 5","","","m. Quinto (Later children of Isidoro.)",""],["bernardino_engracia","BERNARDINO ENGRACIA","","","M","Gen 5","","","(Later children of Isidoro.)",""],["isidoro_jr_engracia_2","ISIDORO JR. ENGRACIA","","","M","Gen 5","","","m. Atay (Later children of Isidoro.)",""],["agripina_engracia","AGRIPINA ENGRACIA","","","F","Gen 5","","","m. Remonte (Later children of Isidoro.)",""],["nestor_bagaboyboy","NESTOR BAGABOYBOY","","","M","Gen 5","","","",""],["aristeo_bagaboyboy","ARISTEO BAGABOYBOY","","","M","Gen 5","","","m. Barroga",""],["beatriz_bagaboyboy","BEATRIZ BAGABOYBOY","","","F","Gen 5","","","m. Bermejo",""],["filotea_bagaboyboy","FILOTEA BAGABOYBOY","","","F","Gen 5","","","m. Chiong",""],["emma_engracia","EMMA ENGRACIA","","","F","Gen 5","","","m. Laurel",""],["victor_jr_engracia","VICTOR JR. ENGRACIA","Melanio","","M","Gen 5","","","m. Sta. Cruz",""],["ina_engracia","INA ENGRACIA","","","F","Gen 5","","","m. Emphasis",""],["lino_engracia_2","LINO ENGRACIA","","","M","Gen 5","","","",""],["elisa_engracia","ELISA ENGRACIA","","","F","Gen 5","","","m. Pasok",""],["anita_engracia","ANITA ENGRACIA","","","F","Gen 5","","","m. Molina",""],["lourdes_engracia","LOURDES ENGRACIA","","","F","Gen 5","","","m. Rosendo",""],["alfredo_engracia","ALFREDO ENGRACIA","","","M","Gen 5","","","",""],["ruben_engracia","RUBEN ENGRACIA","","","M","Gen 5","","","m. Salvador",""],["pastor_engracia","PASTOR ENGRACIA","Arturo","","M","Gen 5","","","",""],["romeo_engracia","ROMEO ENGRACIA","","","M","Gen 5","","","",""],["timoteo_jr_engracia","TIMOTEO JR. ENGRACIA","","","M","Gen 5","","","",""],["marcita_engracia","MARCITA ENGRACIA","","","F","Gen 5","","","",""],["armenio_engracia","ARMENIO ENGRACIA","","","M","Gen 5","","","m. Castillo",""],["sosima_engracia","SOSIMA ENGRACIA","","","F","Gen 5","","","m. Ricote",""],["pura_engracia","PURA ENGRACIA","","","F","Gen 5","","","m. Agudo",""],["elizabeth_engracia","ELIZABETH ENGRACIA","","","F","Gen 5","","","m. Oree",""],["lily_engracia","LILY ENGRACIA","","","F","Gen 5","","","m. Figueroa",""],["nena_engracia","NENA ENGRACIA","","","F","Gen 5","","","",""],["sergio_engracia","SERGIO ENGRACIA","","","M","Gen 5","","","",""],["lolita_engracia","LOLITA ENGRACIA","","","F","Gen 5","","","",""],["david_engracia","DAVID ENGRACIA","","","M","Gen 5","","","m. Bongcawel, then Romanillos",""],["gaudiosa_engracia","GAUDIOSA ENGRACIA","","","F","Gen 5","","","m. Doremon",""],["rita_engracia","RITA ENGRACIA","","","F","Gen 5","","","m. Garrido",""],["placido_engracia","PLACIDO ENGRACIA","","","M","Gen 5","","","m. Villasin",""],["juanita_engracia","JUANITA ENGRACIA","","","F","Gen 5","","","m. Oliva",""],["oliva_engracia","OLIVA ENGRACIA","","","F","Gen 5","","","m. Pasio",""],["epitacia_engracia","EPITACIA ENGRACIA","","","F","Gen 5","","","m. Fabunan",""],["editha_engracia","EDITHA ENGRACIA","","","F","Gen 5","","","",""],["lina_engracia","LINA ENGRACIA","","","F","Gen 5","","","",""],["serapion_jr_pimentel","SERAPION JR. PIMENTEL","","","M","Gen 5","","","m. Lebaste",""],["demosthenes_pimentel","DEMOSTHENES PIMENTEL","","","M","Gen 5","","","m. Irag",""],["inesita_pimentel","INESITA PIMENTEL","","","F","Gen 5","","","m. Dago-on",""],["eduardo_pimentel","EDUARDO PIMENTEL","","","M","Gen 5","","","m. Emata",""],["libertad_pimentel","LIBERTAD PIMENTEL","","","F","Gen 5","","","m. Englebertsen",""],["perla_pimentel","PERLA PIMENTEL","","","F","Gen 5","","","m. Werner",""],["achilles_pimentel","ACHILLES PIMENTEL","","","M","Gen 5","","","m. Tugade",""],["plebescita_pimentel","PLEBESCITA PIMENTEL","","","F","Gen 5","","","",""],["ulysses_pimentel","ULYSSES PIMENTEL","","","M","Gen 5","","","m. Paña",""],["vivencio_engracia","VIVENCIO ENGRACIA","","","M","Gen 5","","","m. Suana",""],["apiceto_engracia","APICETO ENGRACIA","","","M","Gen 5","","","m. Ramos",""],["miguel_engracia","MIGUEL ENGRACIA","","","M","Gen 5","","","m. Milan",""],["cristeta_engracia","CRISTETA ENGRACIA","","","F","Gen 5","","","m. Garcia",""],["irene_engracia","IRENE ENGRACIA","","","F","Gen 5","","","m. Luansing",""],["buevenida_engracia","BUEVENIDA ENGRACIA","","","F","Gen 5","","","m. Alindugan",""],["alfredo_engracia_2","ALFREDO ENGRACIA","","","M","Gen 5","","","m. Calacat",""],["consolacion_engracia","CONSOLACION ENGRACIA","","","F","Gen 5","","","m. Alonto, then Fajardo. Mother of Dr. Ahmad E. Alonto Jr.",""],["alejandrino_engracia","ALEJANDRINO ENGRACIA","","","M","Gen 5","","","m. Albarracin",""],["casiano_engracia","CASIANO ENGRACIA","","","M","Gen 5","","","m. Generalao",""],["rodolfo_engracia","RODOLFO ENGRACIA","Buddy","","M","Gen 5","","","m. Sabaduquia",""],["cruz_engracia","CRUZ ENGRACIA","","","M","Gen 5","","","m. Akit",""],["baltazan_engracia","BALTAZAN ENGRACIA","","","M","Gen 5","","","m. Parojnog",""],["proserpina_engracia","PROSERPINA ENGRACIA","","","F","Gen 5","","","m. Bautista",""],["anita_engracia_2","ANITA ENGRACIA","","","F","Gen 5","","","m. Fernandez",""],["sergio_engracia_2","SERGIO ENGRACIA","","","M","Gen 5","","","",""],["balodoy_teoggenis_engracia","BALODOY TEOGGENIS ENGRACIA","","","M","Gen 5","","","m. Baron",""],["norma_engracia","NORMA ENGRACIA","","","F","Gen 5","","","m. Natinga",""],["carlos_engracia","CARLOS ENGRACIA","","","M","Gen 5","","","m. Dumon",""],["ester_engracia","ESTER ENGRACIA","","","F","Gen 5","","","m. Morgia",""],["inocencio_engracia","INOCENCIO ENGRACIA","","","M","Gen 5","","","",""],["aniceto_aboy","ANICETO ABOY","","","M","Gen 5","","","m. Salvation",""],["eliseo_aboy","ELISEO ABOY","","","M","Gen 5","","","m. Jabinez",""],["manuel_aboy","MANUEL ABOY","","","M","Gen 5","","","m. Maranon",""],["josefa_aboy","JOSEFA ABOY","","","F","Gen 5","","","m. Serra / Villanueva",""],["cita_aboy","CITA ABOY","","","F","Gen 5","","","Deceased.",""],["buenvenida_engracia","BUENVENIDA ENGRACIA","","","F","Gen 5","","","m. Patacsil",""],["rodolfo_engracia_2","RODOLFO ENGRACIA","","","M","Gen 5","","","m. Gumera",""],["edelisa_masip","EDELISA MASIP","","","F","Gen 5","","","m. Calapiz",""],["fenitha_masip","FENITHA MASIP","","","F","Gen 5","","","m. Saavedra",""],["severino_masip","SEVERINO MASIP","","","M","Gen 5","","","m. Tomatao",""],["george_masip","GEORGE MASIP","","","M","Gen 5","","","m. Aban",""],["victor_masip","VICTOR MASIP","","","M","Gen 5","","","",""],["emma_masip","EMMA MASIP","","","F","Gen 5","","","m. Yu",""],["luisito_masip","LUISITO MASIP","","","M","Gen 5","","","m. Delejiro",""],["carmen_engracia","CARMEN ENGRACIA","","","F","Gen 5","","","",""],["leonardo_engracia","LEONARDO ENGRACIA","","","M","Gen 5","","","",""],["nene_engracia","NENE ENGRACIA","","","F","Gen 5","","","",""],["reynaldo_engracia","REYNALDO ENGRACIA","","","M","Gen 5","","","m. Totor",""],["virginia_engracia","VIRGINIA ENGRACIA","","","F","Gen 5","","","m. Weller",""],["emmanuel_engracia","EMMANUEL ENGRACIA","","","M","Gen 5","","","",""],["clele_engracia","CLELE ENGRACIA","","","F","Gen 5","","","m. Suazo",""],["charlito_engracia","CHARLITO ENGRACIA","","","M","Gen 5","","","",""],["rogelio_engracia","ROGELIO ENGRACIA","","","M","Gen 5","","","",""],["dextor_engracia","DEXTOR ENGRACIA","","","M","Gen 5","","","",""],["norberto_engracia","NORBERTO ENGRACIA","","","M","Gen 5","","","",""],["regina_engracia","REGINA ENGRACIA","","","F","Gen 5","","","",""],["gene_engracia","GENE ENGRACIA","","","M","Gen 5","","","m. Corpuz",""],["belen_engracia","BELEN ENGRACIA","","","F","Gen 5","","","m. Alcayra",""],["venus_engracia","VENUS ENGRACIA","","","F","Gen 5","","","m. Perito",""],["jupiter_engracia","JUPITER ENGRACIA","","","M","Gen 5","","","",""],["efren_engracia","EFREN ENGRACIA","","","M","Gen 5","","","m. Muñoz",""],["ruby_engracia","RUBY ENGRACIA","","","F","Gen 5","","","m. Mamoko",""],["mars_engracia","MARS ENGRACIA","","","M","Gen 5","","","m. Corpis",""],["francisco_engracia","FRANCISCO ENGRACIA","","","M","Gen 5","","","",""],["carlos_engracia_2","CARLOS ENGRACIA","","","M","Gen 5","","","",""],["panfilo_rosauro","PANFILO ROSAURO","Nelson","","M","Gen 5","","","m. Emphasis",""],["alfonso_rosauro","ALFONSO ROSAURO","","","M","Gen 5","","","",""],["pamela_rosauro","PAMELA ROSAURO","","","F","Gen 5","","","m. Rosales",""],["erlinda_rosauro","ERLINDA ROSAURO","","","F","Gen 5","","","m. Ferraren",""],["remedios_rosauro","REMEDIOS ROSAURO","","","F","Gen 5","","","m. Borje",""],["gonzalo_jr_rosauro","GONZALO JR. ROSAURO","","","M","Gen 5","","","m. Azcona",""],["jose_rosauro","JOSE ROSAURO","","","M","Gen 5","","","m. Lim",""],["pedrita_rosauro","PEDRITA ROSAURO","","","F","Gen 5","","","",""],["magildo_rosauro","MAGILDO ROSAURO","","","M","Gen 5","","","",""],["lolita_rosauro","LOLITA ROSAURO","","","F","Gen 5","","","m. Bogo",""],["cecilia_rosauro","CECILIA ROSAURO","","","F","Gen 5","","","m. Kaamino",""],["neva_rosauro","NEVA ROSAURO","","","F","Gen 5","","","m. Bascon",""],["amy_rosauro","AMY ROSAURO","","","F","Gen 5","","","m. Jumao-as",""],["juanillo_rosauro","JUANILLO ROSAURO","","","M","Gen 5","","","m. Malindang",""],["enrico_rosauro","ENRICO ROSAURO","","","M","Gen 5","","","m. Angoren",""],["willy_rosauro","WILLY ROSAURO","","","M","Gen 5","","","m. Roxas",""],["zenaida_rosauro","ZENAIDA ROSAURO","","","F","Gen 5","","","m. Wilkins",""],["frano_gapor","FRANO GAPOR","","","M","Gen 5","","","",""],["conchita_gapor","CONCHITA GAPOR","","","F","Gen 5","","","m. Arong",""],["julieta_gapor","JULIETA GAPOR","","","F","Gen 5","","","m. Acapulco",""],["patterson_gapor","PATTERSON GAPOR","","","M","Gen 5","","","",""],["luz_rosauro","LUZ ROSAURO","","","F","Gen 5","","","",""],["benjamin_rosauro","BENJAMIN ROSAURO","","","M","Gen 5","","","",""],["soni","SONI ENGRACIA","","","F","Gen 5","","","",""],["socrates_aquino","SOCRATES AQUINO","","","M","Spouse","","","",""],["solfe","SOLFE T. ENGRACIA","Dr. Solfe T. Engracia Fpoima","","M","Gen 5","","","Author of this family history. Asst. Medical Director, MSU Medical Services & Hospital, Mindanao State University, Marawi City. 10 children.","source"],["mercedes_de_asis","MERCEDES DE ASIS","","","F","Spouse","","","",""],["constitution","CONSTITUTION ENGRACIA","","","F","Gen 5","","","",""],["marciano_escol","MARCIANO ESCOL","","","M","Spouse","","","",""],["engracia_t","ENGRACIA T. ENGRACIA","","","F","Gen 5","","","",""],["leonardo_go","LEONARDO GO","","","M","Spouse","","","",""],["don_felipe","DON FELIPE ENGRACIA","Felipe Jr.","","M","Gen 5","","","",""],["letecia_agduma","LETECIA AGDUMA","","","F","Spouse","","","",""],["warfe","WARFE ENGRACIA","","","M","Gen 5","","","Married twice.",""],["ruth_spears","RUTH SPEARS","","","F","Spouse","","","First wife; mother of Christine and Jasmine.",""],["eleine_pedrosa","ELEINE PEDROSA","","","F","Spouse","","","Second wife; mother of Athenia and Joshua Christopher.",""],["adora","ADORA ENGRACIA","Ray's mother","","F","Gen 5","","","Mother of the 2026 reviser of this document.","patriarch"],["sergio_sitchon","SERGIO SITCHON","","","M","Spouse","","","",""],["ahmad_e_alonto_jr","AHMAD E. ALONTO JR.","Dr. · Former MSU President","","M","Gen 6","","","Grandson of Eleuterio Engracia. Former President of Mindanao State University.","source"],["elmo_e_aquino","ELMO E. AQUINO","","","M","Gen 6","","","",""],["golden_eva_e_aquino","GOLDEN EVA E. AQUINO","","","F","Gen 6","","","",""],["michael_e_aquino","MICHAEL E. AQUINO","","","M","Gen 6","","","",""],["antonio_de_asis_engracia","ANTONIO DE ASIS ENGRACIA","","","M","Gen 6","","","",""],["patria_de_asis_engracia","PATRIA DE ASIS ENGRACIA","","","F","Gen 6","","","",""],["edgardo_padiang","EDGARDO PADIANG","","","M","Spouse","","","Surname also written Badiang in the source.",""],["armi_a_engracia","ARMI A. ENGRACIA","","","F","Gen 6","","","",""],["alain_chua","ALAIN CHUA","","","M","Spouse","","","",""],["riza_mae_engracia","RIZA MAE ENGRACIA","","","F","Gen 6","","","",""],["joselito_a_engracia","JOSELITO A. ENGRACIA","","","M","Gen 6","","","",""],["apollo_samuel_a_engracia","APOLLO SAMUEL A. ENGRACIA","","","M","Gen 6","","","",""],["van_cliburn_a_engracia","VAN CLIBURN A. ENGRACIA","","","M","Gen 6","","","",""],["sol_d_engracia","SOL D. ENGRACIA","","","F","Gen 6","","","",""],["solfe_t_jr_engracia","SOLFE T. JR. ENGRACIA","","","M","Gen 6","","","",""],["jacqueline_engracia","JACQUELINE ENGRACIA","","","F","Gen 6","","","",""],["eurica_a_engracia","EURICA A. ENGRACIA","","","F","Gen 6","","","Deceased.",""],["lemuel_e_escol","LEMUEL E. ESCOL","","","M","Gen 6","","","",""],["junife_e_escol","JUNIFE E. ESCOL","","","F","Gen 6","","","",""],["alvin_e_escol","ALVIN E. ESCOL","","","M","Gen 6","","","",""],["allan_e_escol","ALLAN E. ESCOL","","","M","Gen 6","","","",""],["neil_isidro_e_escol","NEIL ISIDRO E. ESCOL","","","M","Gen 6","","","",""],["cheche_escol","CHECHE ESCOL","","","F","Gen 6","","","",""],["junjun_escol","JUNJUN ESCOL","","","M","Gen 6","","","",""],["marilou_e_go","MARILOU E. GO","","","F","Gen 6","","","",""],["ralfer_e_go","RALFER E. GO","","","M","Gen 6","","","",""],["ofelia_e_go","OFELIA E. GO","","","F","Gen 6","","","",""],["rolando_e_go","ROLANDO E. GO","","","M","Gen 6","","","",""],["ramil_e_go","RAMIL E. GO","","","M","Gen 6","","","",""],["leonardo_e_jr_go","LEONARDO E. JR. GO","","","M","Gen 6","","","",""],["richard_e_go","RICHARD E. GO","","","M","Gen 6","","","",""],["roy_e_go","ROY E. GO","","","M","Gen 6","","","",""],["rico_e_go","RICO E. GO","","","M","Gen 6","","","",""],["maria_dolores_a_engracia","MARIA DOLORES A. ENGRACIA","","","F","Gen 6","","","",""],["marilou_engracia","MARILOU ENGRACIA","","","F","Gen 6","","","",""],["maria_teresa_a_engracia","MARIA TERESA A. ENGRACIA","Marites","","F","Gen 6","","","",""],["don_ramon_a_engracia","DON RAMON A. ENGRACIA","","","M","Gen 6","","","",""],["don_ernesto_a_engracia","DON ERNESTO A. ENGRACIA","Bongbong","","M","Gen 6","","","",""],["christine_s_engracia","CHRISTINE S. ENGRACIA","Tini","","F","Gen 6","","","",""],["jasmine_s_engracia","JASMINE S. ENGRACIA","Mimie","","F","Gen 6","","","",""],["athenia_p_engracia","ATHENIA P. ENGRACIA","","","F","Gen 6","","","",""],["joshua_christopher_p_engracia","JOSHUA CHRISTOPHER P. ENGRACIA","","","M","Gen 6","","","",""],["ray","RAY E. SITCHON","2026 Reviser","","M","Gen 6","","","Revised and updated this family document in 2026. CEO & Principal Engineer, NEXARCH Systems Engineering, Iligan City.","reviser"],["cyril_lacida_sitchon","CYRIL LACIDA SITCHON","","","F","Spouse","","","",""],["may","MAY E. SITCHON","","","F","Gen 6","","","","key"],["neil_anoba","NEIL ANOBA","","","M","Spouse","","","",""],["faye","FAYE E. SITCHON","","","F","Gen 6","","","","key"],["adrian_lacida","ADRIAN LACIDA","","","M","Spouse","","","",""],["sera","SERA E. SITCHON","","","F","Gen 6","","","","key"],["adser","ADSER E. SITCHON","","","M","Gen 6","","","","key"],["ethyl_sitchon","ETHYL SITCHON","","","F","Spouse","","","",""],["john_anthony_e_badiang","JOHN ANTHONY E. BADIANG","","","M","Gen 7","","","","gen7"],["eurica_melany_e_badiang","EURICA MELANY E. BADIANG","","","F","Gen 7","","","","gen7"],["edward_e_badiang","EDWARD E. BADIANG","Dodong","","M","Gen 7","","","","gen7"],["eji_e_chua","EJI E. CHUA","","","M","Gen 7","","","","gen7"],["arabbellah","ARABBELLAH LACIDA SITCHON","","","F","Gen 7","","","","gen7"],["gio","GIO SITCHON ANOBA","","","M","Gen 7","","","","gen7"],["gian","GIAN SITCHON ANOBA","","","M","Gen 7","","","","gen7"],["riane","ADRIANE RIANE SITCHON LACIDA","","","F","Gen 7","","","","gen7"],["lala","ADRIANE LALA SITCHON LACIDA","","","F","Gen 7","","","","gen7"],["andres","ANDRES SITCHON LACIDA","","","M","Gen 7","","","","gen7"]];
-const SEED_R=[["esau","lileni","s"],["esau","fruto","p"],["fruto","bruna","s"],["esau","dimas","p"],["esau","isaac","p"],["esau","salvadora","p"],["fruto","bernandino","p"],["bernandino","custodia_kaamino","s"],["fruto","norberto","p"],["norberto","nene_carreon","s"],["fruto","eusebio","p"],["eusebio","polonia_tambasal","s"],["fruto","agustina","p"],["agustina","victoriano_rosauro","s"],["fruto","isabel","p"],["bernandino","isidoro","p"],["bernandino","cruz","p"],["norberto","victor","p"],["norberto","timoteo","p"],["norberto","segundo","p"],["norberto","crispin","p"],["norberto","ines","p"],["eusebio","tadeo","p"],["eusebio","eleuterio","p"],["eusebio","regina","p"],["eusebio","jose","p"],["eusebio","simona","p"],["eusebio","rustico","p"],["eusebio","felipe","p"],["felipe","soledad_tupas","s"],["eusebio","indelicia","p"],["eusebio","bern2","p"],["eusebio","cleto","p"],["eusebio","generoso","p"],["eusebio","melanio","p"],["agustina","felisa","p"],["agustina","encarnacion","p"],["agustina","gonzalo","p"],["agustina","cosme","p"],["agustina","isidro","p"],["isidoro","judith_engracia","p"],["isidoro","custodia_engracia","p"],["isidoro","artemio_engracia","p"],["isidoro","gregorio_engracia","p"],["isidoro","isidoro_jr_engracia","p"],["isidoro","josefina_engracia","p"],["isidoro","lino_engracia","p"],["isidoro","bonifacio_engracia","p"],["isidoro","mercedes_engracia","p"],["isidoro","lydia_engracia","p"],["isidoro","clemen_engracia","p"],["isidoro","bernardino_engracia","p"],["isidoro","isidoro_jr_engracia_2","p"],["isidoro","agripina_engracia","p"],["cruz","nestor_bagaboyboy","p"],["cruz","aristeo_bagaboyboy","p"],["cruz","beatriz_bagaboyboy","p"],["cruz","filotea_bagaboyboy","p"],["victor","emma_engracia","p"],["victor","victor_jr_engracia","p"],["victor","ina_engracia","p"],["victor","lino_engracia_2","p"],["timoteo","elisa_engracia","p"],["timoteo","anita_engracia","p"],["timoteo","lourdes_engracia","p"],["timoteo","alfredo_engracia","p"],["timoteo","ruben_engracia","p"],["timoteo","pastor_engracia","p"],["timoteo","romeo_engracia","p"],["timoteo","timoteo_jr_engracia","p"],["timoteo","marcita_engracia","p"],["segundo","armenio_engracia","p"],["segundo","sosima_engracia","p"],["segundo","pura_engracia","p"],["segundo","elizabeth_engracia","p"],["segundo","lily_engracia","p"],["segundo","nena_engracia","p"],["segundo","sergio_engracia","p"],["segundo","lolita_engracia","p"],["crispin","david_engracia","p"],["crispin","gaudiosa_engracia","p"],["crispin","rita_engracia","p"],["crispin","placido_engracia","p"],["crispin","juanita_engracia","p"],["crispin","oliva_engracia","p"],["crispin","epitacia_engracia","p"],["crispin","editha_engracia","p"],["crispin","lina_engracia","p"],["ines","serapion_jr_pimentel","p"],["ines","demosthenes_pimentel","p"],["ines","inesita_pimentel","p"],["ines","eduardo_pimentel","p"],["ines","libertad_pimentel","p"],["ines","perla_pimentel","p"],["ines","achilles_pimentel","p"],["ines","plebescita_pimentel","p"],["ines","ulysses_pimentel","p"],["tadeo","vivencio_engracia","p"],["tadeo","apiceto_engracia","p"],["tadeo","miguel_engracia","p"],["tadeo","cristeta_engracia","p"],["tadeo","irene_engracia","p"],["eleuterio","buevenida_engracia","p"],["eleuterio","alfredo_engracia_2","p"],["eleuterio","consolacion_engracia","p"],["eleuterio","alejandrino_engracia","p"],["eleuterio","casiano_engracia","p"],["eleuterio","rodolfo_engracia","p"],["jose","cruz_engracia","p"],["jose","baltazan_engracia","p"],["jose","proserpina_engracia","p"],["jose","anita_engracia_2","p"],["jose","sergio_engracia_2","p"],["jose","balodoy_teoggenis_engracia","p"],["jose","norma_engracia","p"],["jose","carlos_engracia","p"],["jose","ester_engracia","p"],["jose","inocencio_engracia","p"],["simona","aniceto_aboy","p"],["simona","eliseo_aboy","p"],["simona","manuel_aboy","p"],["simona","josefa_aboy","p"],["simona","cita_aboy","p"],["rustico","buenvenida_engracia","p"],["rustico","rodolfo_engracia_2","p"],["indelicia","edelisa_masip","p"],["indelicia","fenitha_masip","p"],["indelicia","severino_masip","p"],["indelicia","george_masip","p"],["indelicia","victor_masip","p"],["indelicia","emma_masip","p"],["indelicia","luisito_masip","p"],["bern2","carmen_engracia","p"],["bern2","leonardo_engracia","p"],["bern2","nene_engracia","p"],["cleto","reynaldo_engracia","p"],["cleto","virginia_engracia","p"],["cleto","emmanuel_engracia","p"],["cleto","clele_engracia","p"],["cleto","charlito_engracia","p"],["cleto","rogelio_engracia","p"],["cleto","dextor_engracia","p"],["cleto","norberto_engracia","p"],["cleto","regina_engracia","p"],["generoso","gene_engracia","p"],["generoso","belen_engracia","p"],["generoso","venus_engracia","p"],["generoso","jupiter_engracia","p"],["generoso","efren_engracia","p"],["generoso","ruby_engracia","p"],["generoso","mars_engracia","p"],["melanio","francisco_engracia","p"],["melanio","carlos_engracia_2","p"],["gonzalo","panfilo_rosauro","p"],["gonzalo","alfonso_rosauro","p"],["gonzalo","pamela_rosauro","p"],["gonzalo","erlinda_rosauro","p"],["gonzalo","remedios_rosauro","p"],["gonzalo","gonzalo_jr_rosauro","p"],["gonzalo","jose_rosauro","p"],["gonzalo","pedrita_rosauro","p"],["gonzalo","magildo_rosauro","p"],["gonzalo","lolita_rosauro","p"],["gonzalo","cecilia_rosauro","p"],["gonzalo","neva_rosauro","p"],["cosme","amy_rosauro","p"],["cosme","juanillo_rosauro","p"],["cosme","enrico_rosauro","p"],["cosme","willy_rosauro","p"],["cosme","zenaida_rosauro","p"],["felisa","frano_gapor","p"],["felisa","conchita_gapor","p"],["felisa","julieta_gapor","p"],["felisa","patterson_gapor","p"],["isidro","luz_rosauro","p"],["isidro","benjamin_rosauro","p"],["felipe","soni","p"],["soni","socrates_aquino","s"],["felipe","solfe","p"],["solfe","mercedes_de_asis","s"],["felipe","constitution","p"],["constitution","marciano_escol","s"],["felipe","engracia_t","p"],["engracia_t","leonardo_go","s"],["felipe","don_felipe","p"],["don_felipe","letecia_agduma","s"],["felipe","warfe","p"],["warfe","ruth_spears","s"],["warfe","eleine_pedrosa","s"],["felipe","adora","p"],["adora","sergio_sitchon","s"],["consolacion_engracia","ahmad_e_alonto_jr","p"],["soni","elmo_e_aquino","p"],["soni","golden_eva_e_aquino","p"],["soni","michael_e_aquino","p"],["solfe","antonio_de_asis_engracia","p"],["solfe","patria_de_asis_engracia","p"],["patria_de_asis_engracia","edgardo_padiang","s"],["solfe","armi_a_engracia","p"],["armi_a_engracia","alain_chua","s"],["solfe","riza_mae_engracia","p"],["solfe","joselito_a_engracia","p"],["solfe","apollo_samuel_a_engracia","p"],["solfe","van_cliburn_a_engracia","p"],["solfe","sol_d_engracia","p"],["solfe","solfe_t_jr_engracia","p"],["solfe","jacqueline_engracia","p"],["solfe","eurica_a_engracia","p"],["constitution","lemuel_e_escol","p"],["constitution","junife_e_escol","p"],["constitution","alvin_e_escol","p"],["constitution","allan_e_escol","p"],["constitution","neil_isidro_e_escol","p"],["constitution","cheche_escol","p"],["constitution","junjun_escol","p"],["engracia_t","marilou_e_go","p"],["engracia_t","ralfer_e_go","p"],["engracia_t","ofelia_e_go","p"],["engracia_t","rolando_e_go","p"],["engracia_t","ramil_e_go","p"],["engracia_t","leonardo_e_jr_go","p"],["engracia_t","richard_e_go","p"],["engracia_t","roy_e_go","p"],["engracia_t","rico_e_go","p"],["don_felipe","maria_dolores_a_engracia","p"],["don_felipe","marilou_engracia","p"],["don_felipe","maria_teresa_a_engracia","p"],["don_felipe","don_ramon_a_engracia","p"],["don_felipe","don_ernesto_a_engracia","p"],["warfe","christine_s_engracia","p"],["warfe","jasmine_s_engracia","p"],["warfe","athenia_p_engracia","p"],["warfe","joshua_christopher_p_engracia","p"],["adora","ray","p"],["ray","cyril_lacida_sitchon","s"],["adora","may","p"],["may","neil_anoba","s"],["adora","faye","p"],["faye","adrian_lacida","s"],["adora","sera","p"],["adora","adser","p"],["adser","ethyl_sitchon","s"],["patria_de_asis_engracia","john_anthony_e_badiang","p"],["patria_de_asis_engracia","eurica_melany_e_badiang","p"],["patria_de_asis_engracia","edward_e_badiang","p"],["armi_a_engracia","eji_e_chua","p"],["ray","arabbellah","p"],["may","gio","p"],["may","gian","p"],["faye","riane","p"],["faye","lala","p"],["faye","andres","p"]];
+const SEED_R=[["esau","lileni","s"],["esau","fruto","p"],["lileni","fruto","p"],["fruto","bruna","s"],["esau","dimas","p"],["lileni","dimas","p"],["esau","isaac","p"],["lileni","isaac","p"],["esau","salvadora","p"],["lileni","salvadora","p"],["fruto","bernandino","p"],["bruna","bernandino","p"],["bernandino","custodia_kaamino","s"],["fruto","norberto","p"],["bruna","norberto","p"],["norberto","nene_carreon","s"],["fruto","eusebio","p"],["bruna","eusebio","p"],["eusebio","polonia_tambasal","s"],["fruto","agustina","p"],["bruna","agustina","p"],["agustina","victoriano_rosauro","s"],["fruto","isabel","p"],["bruna","isabel","p"],["bernandino","isidoro","p"],["custodia_kaamino","isidoro","p"],["bernandino","cruz","p"],["custodia_kaamino","cruz","p"],["norberto","victor","p"],["nene_carreon","victor","p"],["norberto","timoteo","p"],["nene_carreon","timoteo","p"],["norberto","segundo","p"],["nene_carreon","segundo","p"],["norberto","crispin","p"],["nene_carreon","crispin","p"],["norberto","ines","p"],["nene_carreon","ines","p"],["eusebio","tadeo","p"],["polonia_tambasal","tadeo","p"],["eusebio","eleuterio","p"],["polonia_tambasal","eleuterio","p"],["eusebio","regina","p"],["polonia_tambasal","regina","p"],["eusebio","jose","p"],["polonia_tambasal","jose","p"],["eusebio","simona","p"],["polonia_tambasal","simona","p"],["eusebio","rustico","p"],["polonia_tambasal","rustico","p"],["eusebio","felipe","p"],["polonia_tambasal","felipe","p"],["felipe","soledad_tupas","s"],["eusebio","indelicia","p"],["polonia_tambasal","indelicia","p"],["eusebio","bern2","p"],["polonia_tambasal","bern2","p"],["eusebio","cleto","p"],["polonia_tambasal","cleto","p"],["eusebio","generoso","p"],["polonia_tambasal","generoso","p"],["eusebio","melanio","p"],["polonia_tambasal","melanio","p"],["agustina","felisa","p"],["victoriano_rosauro","felisa","p"],["agustina","encarnacion","p"],["victoriano_rosauro","encarnacion","p"],["agustina","gonzalo","p"],["victoriano_rosauro","gonzalo","p"],["agustina","cosme","p"],["victoriano_rosauro","cosme","p"],["agustina","isidro","p"],["victoriano_rosauro","isidro","p"],["isidoro","judith_engracia","p"],["isidoro","custodia_engracia","p"],["isidoro","artemio_engracia","p"],["isidoro","gregorio_engracia","p"],["isidoro","isidoro_jr_engracia","p"],["isidoro","josefina_engracia","p"],["isidoro","lino_engracia","p"],["isidoro","bonifacio_engracia","p"],["isidoro","mercedes_engracia","p"],["isidoro","lydia_engracia","p"],["isidoro","clemen_engracia","p"],["isidoro","bernardino_engracia","p"],["isidoro","isidoro_jr_engracia_2","p"],["isidoro","agripina_engracia","p"],["cruz","nestor_bagaboyboy","p"],["cruz","aristeo_bagaboyboy","p"],["cruz","beatriz_bagaboyboy","p"],["cruz","filotea_bagaboyboy","p"],["victor","emma_engracia","p"],["victor","victor_jr_engracia","p"],["victor","ina_engracia","p"],["victor","lino_engracia_2","p"],["timoteo","elisa_engracia","p"],["timoteo","anita_engracia","p"],["timoteo","lourdes_engracia","p"],["timoteo","alfredo_engracia","p"],["timoteo","ruben_engracia","p"],["timoteo","pastor_engracia","p"],["timoteo","romeo_engracia","p"],["timoteo","timoteo_jr_engracia","p"],["timoteo","marcita_engracia","p"],["segundo","armenio_engracia","p"],["segundo","sosima_engracia","p"],["segundo","pura_engracia","p"],["segundo","elizabeth_engracia","p"],["segundo","lily_engracia","p"],["segundo","nena_engracia","p"],["segundo","sergio_engracia","p"],["segundo","lolita_engracia","p"],["crispin","david_engracia","p"],["crispin","gaudiosa_engracia","p"],["crispin","rita_engracia","p"],["crispin","placido_engracia","p"],["crispin","juanita_engracia","p"],["crispin","oliva_engracia","p"],["crispin","epitacia_engracia","p"],["crispin","editha_engracia","p"],["crispin","lina_engracia","p"],["ines","serapion_jr_pimentel","p"],["ines","demosthenes_pimentel","p"],["ines","inesita_pimentel","p"],["ines","eduardo_pimentel","p"],["ines","libertad_pimentel","p"],["ines","perla_pimentel","p"],["ines","achilles_pimentel","p"],["ines","plebescita_pimentel","p"],["ines","ulysses_pimentel","p"],["tadeo","vivencio_engracia","p"],["tadeo","apiceto_engracia","p"],["tadeo","miguel_engracia","p"],["tadeo","cristeta_engracia","p"],["tadeo","irene_engracia","p"],["eleuterio","buevenida_engracia","p"],["eleuterio","alfredo_engracia_2","p"],["eleuterio","consolacion_engracia","p"],["eleuterio","alejandrino_engracia","p"],["eleuterio","casiano_engracia","p"],["eleuterio","rodolfo_engracia","p"],["jose","cruz_engracia","p"],["jose","baltazan_engracia","p"],["jose","proserpina_engracia","p"],["jose","anita_engracia_2","p"],["jose","sergio_engracia_2","p"],["jose","balodoy_teoggenis_engracia","p"],["jose","norma_engracia","p"],["jose","carlos_engracia","p"],["jose","ester_engracia","p"],["jose","inocencio_engracia","p"],["simona","aniceto_aboy","p"],["simona","eliseo_aboy","p"],["simona","manuel_aboy","p"],["simona","josefa_aboy","p"],["simona","cita_aboy","p"],["rustico","buenvenida_engracia","p"],["rustico","rodolfo_engracia_2","p"],["indelicia","edelisa_masip","p"],["indelicia","fenitha_masip","p"],["indelicia","severino_masip","p"],["indelicia","george_masip","p"],["indelicia","victor_masip","p"],["indelicia","emma_masip","p"],["indelicia","luisito_masip","p"],["bern2","carmen_engracia","p"],["bern2","leonardo_engracia","p"],["bern2","nene_engracia","p"],["cleto","reynaldo_engracia","p"],["cleto","virginia_engracia","p"],["cleto","emmanuel_engracia","p"],["cleto","clele_engracia","p"],["cleto","charlito_engracia","p"],["cleto","rogelio_engracia","p"],["cleto","dextor_engracia","p"],["cleto","norberto_engracia","p"],["cleto","regina_engracia","p"],["generoso","gene_engracia","p"],["generoso","belen_engracia","p"],["generoso","venus_engracia","p"],["generoso","jupiter_engracia","p"],["generoso","efren_engracia","p"],["generoso","ruby_engracia","p"],["generoso","mars_engracia","p"],["melanio","francisco_engracia","p"],["melanio","carlos_engracia_2","p"],["gonzalo","panfilo_rosauro","p"],["gonzalo","alfonso_rosauro","p"],["gonzalo","pamela_rosauro","p"],["gonzalo","erlinda_rosauro","p"],["gonzalo","remedios_rosauro","p"],["gonzalo","gonzalo_jr_rosauro","p"],["gonzalo","jose_rosauro","p"],["gonzalo","pedrita_rosauro","p"],["gonzalo","magildo_rosauro","p"],["gonzalo","lolita_rosauro","p"],["gonzalo","cecilia_rosauro","p"],["gonzalo","neva_rosauro","p"],["cosme","amy_rosauro","p"],["cosme","juanillo_rosauro","p"],["cosme","enrico_rosauro","p"],["cosme","willy_rosauro","p"],["cosme","zenaida_rosauro","p"],["felisa","frano_gapor","p"],["felisa","conchita_gapor","p"],["felisa","julieta_gapor","p"],["felisa","patterson_gapor","p"],["isidro","luz_rosauro","p"],["isidro","benjamin_rosauro","p"],["felipe","soni","p"],["soledad_tupas","soni","p"],["soni","socrates_aquino","s"],["felipe","solfe","p"],["soledad_tupas","solfe","p"],["solfe","mercedes_de_asis","s"],["felipe","constitution","p"],["soledad_tupas","constitution","p"],["constitution","marciano_escol","s"],["felipe","engracia_t","p"],["soledad_tupas","engracia_t","p"],["engracia_t","leonardo_go","s"],["felipe","don_felipe","p"],["soledad_tupas","don_felipe","p"],["don_felipe","letecia_agduma","s"],["felipe","warfe","p"],["soledad_tupas","warfe","p"],["warfe","ruth_spears","s"],["warfe","eleine_pedrosa","s"],["felipe","adora","p"],["soledad_tupas","adora","p"],["adora","sergio_sitchon","s"],["consolacion_engracia","ahmad_e_alonto_jr","p"],["soni","elmo_e_aquino","p"],["socrates_aquino","elmo_e_aquino","p"],["soni","golden_eva_e_aquino","p"],["socrates_aquino","golden_eva_e_aquino","p"],["soni","michael_e_aquino","p"],["socrates_aquino","michael_e_aquino","p"],["solfe","antonio_de_asis_engracia","p"],["mercedes_de_asis","antonio_de_asis_engracia","p"],["solfe","patria_de_asis_engracia","p"],["mercedes_de_asis","patria_de_asis_engracia","p"],["patria_de_asis_engracia","edgardo_padiang","s"],["solfe","armi_a_engracia","p"],["mercedes_de_asis","armi_a_engracia","p"],["armi_a_engracia","alain_chua","s"],["solfe","riza_mae_engracia","p"],["mercedes_de_asis","riza_mae_engracia","p"],["solfe","joselito_a_engracia","p"],["mercedes_de_asis","joselito_a_engracia","p"],["solfe","apollo_samuel_a_engracia","p"],["mercedes_de_asis","apollo_samuel_a_engracia","p"],["solfe","van_cliburn_a_engracia","p"],["mercedes_de_asis","van_cliburn_a_engracia","p"],["solfe","sol_d_engracia","p"],["mercedes_de_asis","sol_d_engracia","p"],["solfe","solfe_t_jr_engracia","p"],["mercedes_de_asis","solfe_t_jr_engracia","p"],["solfe","jacqueline_engracia","p"],["mercedes_de_asis","jacqueline_engracia","p"],["solfe","eurica_a_engracia","p"],["mercedes_de_asis","eurica_a_engracia","p"],["constitution","lemuel_e_escol","p"],["marciano_escol","lemuel_e_escol","p"],["constitution","junife_e_escol","p"],["marciano_escol","junife_e_escol","p"],["constitution","alvin_e_escol","p"],["marciano_escol","alvin_e_escol","p"],["constitution","allan_e_escol","p"],["marciano_escol","allan_e_escol","p"],["constitution","neil_isidro_e_escol","p"],["marciano_escol","neil_isidro_e_escol","p"],["constitution","cheche_escol","p"],["marciano_escol","cheche_escol","p"],["constitution","junjun_escol","p"],["marciano_escol","junjun_escol","p"],["engracia_t","marilou_e_go","p"],["leonardo_go","marilou_e_go","p"],["engracia_t","ralfer_e_go","p"],["leonardo_go","ralfer_e_go","p"],["engracia_t","ofelia_e_go","p"],["leonardo_go","ofelia_e_go","p"],["engracia_t","rolando_e_go","p"],["leonardo_go","rolando_e_go","p"],["engracia_t","ramil_e_go","p"],["leonardo_go","ramil_e_go","p"],["engracia_t","leonardo_e_jr_go","p"],["leonardo_go","leonardo_e_jr_go","p"],["engracia_t","richard_e_go","p"],["leonardo_go","richard_e_go","p"],["engracia_t","roy_e_go","p"],["leonardo_go","roy_e_go","p"],["engracia_t","rico_e_go","p"],["leonardo_go","rico_e_go","p"],["don_felipe","maria_dolores_a_engracia","p"],["letecia_agduma","maria_dolores_a_engracia","p"],["don_felipe","marilou_engracia","p"],["letecia_agduma","marilou_engracia","p"],["don_felipe","maria_teresa_a_engracia","p"],["letecia_agduma","maria_teresa_a_engracia","p"],["don_felipe","don_ramon_a_engracia","p"],["letecia_agduma","don_ramon_a_engracia","p"],["don_felipe","don_ernesto_a_engracia","p"],["letecia_agduma","don_ernesto_a_engracia","p"],["warfe","christine_s_engracia","p"],["ruth_spears","christine_s_engracia","p"],["warfe","jasmine_s_engracia","p"],["ruth_spears","jasmine_s_engracia","p"],["warfe","athenia_p_engracia","p"],["eleine_pedrosa","athenia_p_engracia","p"],["warfe","joshua_christopher_p_engracia","p"],["eleine_pedrosa","joshua_christopher_p_engracia","p"],["adora","ray","p"],["sergio_sitchon","ray","p"],["ray","cyril_lacida_sitchon","s"],["adora","may","p"],["sergio_sitchon","may","p"],["may","neil_anoba","s"],["adora","faye","p"],["sergio_sitchon","faye","p"],["faye","adrian_lacida","s"],["adora","sera","p"],["sergio_sitchon","sera","p"],["adora","adser","p"],["sergio_sitchon","adser","p"],["adser","ethyl_sitchon","s"],["patria_de_asis_engracia","john_anthony_e_badiang","p"],["edgardo_padiang","john_anthony_e_badiang","p"],["patria_de_asis_engracia","eurica_melany_e_badiang","p"],["edgardo_padiang","eurica_melany_e_badiang","p"],["patria_de_asis_engracia","edward_e_badiang","p"],["edgardo_padiang","edward_e_badiang","p"],["armi_a_engracia","eji_e_chua","p"],["alain_chua","eji_e_chua","p"],["ray","arabbellah","p"],["cyril_lacida_sitchon","arabbellah","p"],["may","gio","p"],["neil_anoba","gio","p"],["may","gian","p"],["neil_anoba","gian","p"],["faye","riane","p"],["adrian_lacida","riane","p"],["faye","lala","p"],["adrian_lacida","lala","p"],["faye","andres","p"],["adrian_lacida","andres","p"]];
 const LDB = {
   key:'ft_local_db',
   fresh(){ const now=new Date().toISOString();
@@ -443,16 +488,26 @@ async function load(){
   index();
 }
 function index(){
-  S.byId={}; S.kids={}; S.spouses={}; S.parentOf={};
-  S.people.forEach(p=>{S.byId[p.id]=p; S.kids[p.id]=[]; S.spouses[p.id]=[];});
+  S.byId={}; S.kids={}; S.spouses={}; S.parentOf={}; S.parents={};
+  S.people.forEach(p=>{S.byId[p.id]=p; S.kids[p.id]=[]; S.spouses[p.id]=[]; S.parents[p.id]=[];
+    try{ p._extra=p.extra?JSON.parse(p.extra):[]; }catch(e){ p._extra=[]; } });
+  const allKids={}; S.people.forEach(p=>allKids[p.id]=[]);
   S.rels.forEach(r=>{
     if(!S.byId[r.person_id]||!S.byId[r.related_id]) return;
-    if(r.relationship_type==='parent_of'){ S.kids[r.person_id].push(r.related_id); S.parentOf[r.related_id]=r.person_id; }
-    if(r.relationship_type==='spouse_of'){ S.spouses[r.person_id].push(r.related_id); S.spouses[r.related_id].push(r.person_id); }
+    if(r.relationship_type==='parent_of'){ S.parents[r.related_id].push(r.person_id); allKids[r.person_id].push(r.related_id); }
+    if(r.relationship_type==='spouse_of'){ if(!S.spouses[r.person_id].includes(r.related_id)) S.spouses[r.person_id].push(r.related_id);
+      if(!S.spouses[r.related_id].includes(r.person_id)) S.spouses[r.related_id].push(r.person_id); }
   });
-  // spouse-only = no parent, no kids, but married to someone → drawn inline with partner
-  S.spouseOnly=new Set(S.people.filter(p=>!S.parentOf[p.id]&&!S.kids[p.id].length&&S.spouses[p.id].length).map(p=>p.id));
-  S.roots=S.people.filter(p=>!S.parentOf[p.id]&&!S.spouseOnly.has(p.id)).map(p=>p.id);
+  // "spouse-only" = married in, no parents here, and every child they have is also a child of a spouse → drawn inline beside the partner
+  const cand=new Set(S.people.filter(p=>!S.parents[p.id].length&&S.spouses[p.id].length&&
+    allKids[p.id].every(k=>S.parents[k].some(q=>S.spouses[p.id].includes(q)))).map(p=>p.id));
+  // a couple cannot both be "married in": when every spouse of a candidate is also a candidate, the first-recorded one stays in the tree
+  const order={}; S.people.forEach((p,i)=>order[p.id]=i);
+  S.spouseOnly=new Set([...cand].filter(id=>!S.spouses[id].every(q=>cand.has(q)&&order[q]>order[id])));
+  // each child hangs under one "tree parent": the first parent who is not spouse-only
+  S.people.forEach(c=>{ const ps=S.parents[c.id]; if(!ps.length) return;
+    const tp=ps.find(q=>!S.spouseOnly.has(q))||ps[0]; S.parentOf[c.id]=tp; S.kids[tp].push(c.id); });
+  S.roots=S.people.filter(p=>!S.parents[p.id].length&&!S.spouseOnly.has(p.id)).map(p=>p.id);
 }
 
 // ── INIT ──────────────────────────────────────────────────
@@ -507,10 +562,17 @@ function node(id,flat){
    <div class="detail">
      ${p.born_name?`<p><b>Born as:</b> ${esc(p.born_name)}</p>`:''}
      ${p.occupation?`<p><b>Occupation:</b> ${esc(p.occupation)}</p>`:''}
-     ${S.parentOf[id]?`<p><b>Parent:</b> ${esc(S.byId[S.parentOf[id]].name)}</p>`:''}
+     ${parentsHtml(id)}
      ${sp.length?`<p><b>Spouse:</b> ${sp.map(s=>esc(s.name)+(s.notes?' — '+esc(s.notes):'')).join('; ')}</p>`:''}
+     ${lineageHtml(id)}
+     ${siblingsHtml(id)}
      ${p.birth_place?`<p><b>Birthplace:</b> ${esc(p.birth_place)}</p>`:''}
+     ${(p.address||(p.lat&&p.lng))?`<p class="addr"><b>📍 Address:</b> ${esc(p.address||(p.lat+', '+p.lng))}
+        ${p.lat&&p.lng?`<span class="maplinks"><button type="button" class="tb" data-map="${id}">🗺 View map</button>
+        <a class="tb" target="_blank" rel="noopener" href="https://www.google.com/maps?q=${encodeURIComponent(p.lat+','+p.lng)}">Open in Google Maps ↗</a></span>`
+        :`<a class="tb" target="_blank" rel="noopener" href="https://www.google.com/maps/search/${encodeURIComponent(p.address)}">Open in Google Maps ↗</a>`}</p>`:''}
      ${p.notes?`<p>${esc(p.notes)}</p>`:''}
+     ${(p._extra||[]).map(x=>`<p><b>${esc(x.k)}:</b> ${esc(x.v)}</p>`).join('')}
      ${ph&&ph.caption?`<p style="color:var(--gray)"><i>${esc(ph.caption)}</i></p>`:''}
      ${!p.born_name&&!p.occupation&&!p.notes&&!sp.length?'<p style="color:var(--gray)">No further details recorded.</p>':''}
      ${commentsHtml(id)}
@@ -532,6 +594,9 @@ function node(id,flat){
     else { toggleSet(S.open,id); d.classList.toggle('open'); }
   };
   d.querySelectorAll(':scope > .detail .acts button').forEach(b=>b.onclick=e=>{e.stopPropagation(); action(b.dataset.a,id);});
+  d.querySelectorAll(':scope > .detail .jl').forEach(a=>a.onclick=e=>{ e.preventDefault(); e.stopPropagation(); jump(a.dataset.j); });
+  d.querySelectorAll(':scope > .detail [data-map]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); showMap(b.dataset.map); });
+  d.querySelectorAll(':scope > .detail .maplinks a').forEach(a=>a.onclick=e=>e.stopPropagation());
   const cm=d.querySelector(':scope > .detail .cmts');
   cm.querySelectorAll('.cdel').forEach(b=>b.onclick=e=>{e.stopPropagation(); delComment(b.dataset.cid,id);});
   const post=cm.querySelector('.cpost'); if(post) post.onclick=e=>{e.stopPropagation(); postComment(id,cm);};
@@ -659,20 +724,48 @@ function action(a,id){
 }
 document.getElementById('fab').onclick=()=>openEdit(null,{});
 
-function fillSelects(exclude){
-  const opts='<option value="">— none —</option>'+[...S.people].sort((a,b)=>a.name.localeCompare(b.name))
-    .filter(p=>p.id!==exclude).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
-  document.getElementById('f-parent').innerHTML=opts; document.getElementById('f-spouse').innerHTML=opts;
+const F={parents:[],spouses:[],extra:[]};   // working copy while the form is open
+function peopleOpts(exclude){
+  return '<option value="">— choose a person —</option>'+[...S.people].sort((a,b)=>a.name.localeCompare(b.name))
+    .filter(p=>p.id!==exclude).map(p=>`<option value="${p.id}">${esc(p.name)}${p.generation?' · '+esc(p.generation):''}</option>`).join('');
 }
+function renderRelLists(){
+  const li=(arr,kind)=>arr.map((pid,i)=>`<div class="ri"><span>${esc(S.byId[pid]?S.byId[pid].name:pid)}</span><button type="button" class="rx" data-k="${kind}" data-i="${i}" title="Remove link">✕</button></div>`).join('');
+  document.getElementById('f-spouses').innerHTML=li(F.spouses,'spouses')||'<div class="ri" style="color:var(--gray)">none</div>';
+  document.getElementById('f-extra').innerHTML=F.extra.map((x,i)=>`<div class="ri">
+    <input class="k" data-i="${i}" data-f="k" placeholder="Field" value="${esc(x.k)}"><input data-i="${i}" data-f="v" placeholder="Value" value="${esc(x.v)}">
+    <button type="button" class="rx" data-k="extra" data-i="${i}">✕</button></div>`).join('');
+  document.querySelectorAll('#panel-rl .rx, #ov-edit .rx').forEach(b=>b.onclick=()=>{ F[b.dataset.k].splice(+b.dataset.i,1); renderRelLists(); });
+  document.querySelectorAll('#f-extra input').forEach(i=>i.oninput=()=>{ F.extra[+i.dataset.i][i.dataset.f]=i.value; });
+}
+function addRel(kind,selId){
+  const sel=document.getElementById(selId), v=sel.value; if(!v) return toast('Choose a person first');
+  if(v===document.getElementById('f-id').value) return toast('A person cannot be linked to themselves');
+  if(!F[kind].includes(v)) F[kind].push(v); sel.value=''; renderRelLists();
+}
+document.getElementById('f-spouse-btn').onclick=()=>addRel('spouses','f-spouse-add');
+document.getElementById('f-extra-btn').onclick=()=>{ F.extra.push({k:'',v:''}); renderRelLists(); setTimeout(()=>{ const k=document.querySelectorAll('#f-extra input.k'); k[k.length-1]?.focus(); },30); };
+
 function openEdit(id,pre={}){
   const p=id?S.byId[id]:{};
   document.getElementById('ed-title').textContent=id?'Edit person':pre.parent?'Add child of '+S.byId[pre.parent].name:pre.spouse?'Add spouse of '+S.byId[pre.spouse].name:'Add person';
   const v=(k,x)=>document.getElementById(k).value=x||'';
   v('f-id',id); v('f-name',p.name); v('f-nick',p.nickname); v('f-born',p.born_name); v('f-gender',p.gender||'M');
   v('f-gen',p.generation||(pre.parent?nextGen(S.byId[pre.parent].generation):pre.spouse?'Spouse':''));
-  v('f-by',p.birth_year); v('f-dy',p.death_year); v('f-occ',p.occupation); v('f-bp',p.birth_place); v('f-notes',p.notes); v('f-var',p.variant);
-  fillSelects(id);
-  v('f-parent',pre.parent||S.parentOf[id]||''); v('f-spouse',pre.spouse||(id&&S.spouses[id][0])||'');
+  v('f-by',p.birth_year); v('f-dy',p.death_year); v('f-occ',p.occupation); v('f-bp',p.birth_place); v('f-addr',p.address); v('f-lat',p.lat); v('f-lng',p.lng); showLatLng(); v('f-notes',p.notes); v('f-var',p.variant);
+  document.getElementById('f-spouse-add').innerHTML=peopleOpts(id);
+  const none='<option value="">— none / unknown —</option>';
+  const byG=g=>none+[...S.people].filter(q=>q.id!==id&&q.gender===g).sort((a,b)=>a.name.localeCompare(b.name)).map(q=>`<option value="${q.id}">${esc(q.name)}${q.generation?' · '+esc(q.generation):''}</option>`).join('');
+  document.getElementById('f-father').innerHTML=byG('M'); document.getElementById('f-mother').innerHTML=byG('F');
+  let fa='',mo='';
+  if(id){ const fm=fatherMother(id); fa=fm.father?fm.father.id:''; mo=fm.mother?fm.mother.id:''; }
+  else if(pre.parent){ const q=S.byId[pre.parent]; if(q.gender==='F') mo=q.id; else fa=q.id;
+    const sp=(S.spouses[q.id]||[]).map(x=>S.byId[x]).filter(x=>x&&x.gender!==q.gender); if(sp.length===1){ if(q.gender==='F') fa=sp[0].id; else mo=sp[0].id; } }
+  document.getElementById('f-father').value=fa; document.getElementById('f-mother').value=mo;
+  F.parents=[fa,mo].filter(Boolean);
+  F.spouses=id?[...S.spouses[id]]:(pre.spouse?[pre.spouse]:[]);
+  F.extra=id?(p._extra||[]).map(x=>({...x})):[];
+  renderRelLists();
   v('f-photo',''); document.getElementById('f-pv').src=(id&&S.photos[id]&&S.photos[id].url)||'';
   openOv('ov-edit');
 }
@@ -682,20 +775,20 @@ document.getElementById('ed-save').onclick=async()=>{
   const g=k=>document.getElementById(k).value.trim();
   if(!g('f-name')) return toast('⚠ Name is required');
   const id=g('f-id'), data={name:g('f-name').toUpperCase(),nickname:g('f-nick'),born_name:g('f-born'),gender:g('f-gender'),
-    generation:g('f-gen'),birth_year:g('f-by'),death_year:g('f-dy'),occupation:g('f-occ'),birth_place:g('f-bp'),notes:g('f-notes'),variant:g('f-var')};
+    generation:g('f-gen'),birth_year:g('f-by'),death_year:g('f-dy'),occupation:g('f-occ'),birth_place:g('f-bp'),address:g('f-addr'),lat:g('f-lat'),lng:g('f-lng'),notes:g('f-notes'),variant:g('f-var'),
+    extra:JSON.stringify(F.extra.filter(x=>x.k.trim()||x.v.trim()).map(x=>({k:x.k.trim(),v:x.v.trim()})))};
   const b=document.getElementById('ed-save'); b.textContent='Saving…';
   let sid=id, r = id?await api({action:'updatePerson',id,...data}):await api({action:'addPerson',...data});
   if(!r.ok){ b.textContent='💾 Save'; return toast('⚠ '+r.error); }
   if(!id) sid=r.id;
-  // relationships
-  const par=g('f-parent'), sp=g('f-spouse');
-  const oldPar=S.parentOf[sid];
-  if(par!==(oldPar||'')){
-    if(oldPar){ const rel=S.rels.find(x=>x.relationship_type==='parent_of'&&x.person_id===oldPar&&x.related_id===sid); if(rel) await api({action:'deleteRelationship',id:rel.id}); }
-    if(par) await api({action:'addRelationship',person_id:par,related_id:sid,relationship_type:'parent_of'});
-  }
-  if(sp && !S.rels.some(x=>x.relationship_type==='spouse_of'&&((x.person_id===sid&&x.related_id===sp)||(x.person_id===sp&&x.related_id===sid))))
-    await api({action:'addRelationship',person_id:sid,related_id:sp,relationship_type:'spouse_of'});
+  // relationships: compare the form's lists with what is stored, delete removed links, add new ones
+  F.parents=[g('f-father'),g('f-mother')].filter(Boolean);
+  const oldP=id?S.parents[id]:[], oldS=id?S.spouses[id]:[];
+  for(const q of oldP) if(!F.parents.includes(q)){ const rel=S.rels.find(x=>x.relationship_type==='parent_of'&&x.person_id===q&&x.related_id===sid); if(rel) await api({action:'deleteRelationship',id:rel.id}); }
+  for(const q of F.parents) if(!oldP.includes(q)) await api({action:'addRelationship',person_id:q,related_id:sid,relationship_type:'parent_of'});
+  for(const q of oldS) if(!F.spouses.includes(q)){ for(const rel of S.rels.filter(x=>x.relationship_type==='spouse_of'&&((x.person_id===q&&x.related_id===sid)||(x.person_id===sid&&x.related_id===q)))) await api({action:'deleteRelationship',id:rel.id}); }
+  for(const q of F.spouses) if(!oldS.includes(q)) await api({action:'addRelationship',person_id:sid,related_id:q,relationship_type:'spouse_of'});
+  const par=F.parents[0];
   // photo taken in the form → save it with the person
   const photo=g('f-photo'); if(photo) await api({action:'setPhoto',personId:sid,url:photo,caption:''});
   closeOv('ov-edit'); b.textContent='💾 Save';
@@ -753,6 +846,105 @@ document.getElementById('ph-del').onclick=async()=>{
   await api({action:'deletePhoto',personId:S.cur}); closeOv('ov-photo'); await load(); render(); setAuth(true); toast('Photo removed');
 };
 
+// ── FATHER / MOTHER ─────────────────────────────────────────
+function fatherMother(id){
+  const ps=(S.parents[id]||[]).map(q=>S.byId[q]).filter(Boolean);
+  let father=ps.find(q=>q.gender==='M'), mother=ps.find(q=>q.gender==='F');
+  if(!father&&!mother&&ps[0]){ (ps[0].gender==='F'?mother=ps[0]:father=ps[0]); }
+  // if only one parent is recorded, suggest the other from that parent's spouse (shown as "not recorded" if none)
+  const rec=father||mother; let guess=null;
+  if(rec&&!(father&&mother)){ const sp=(S.spouses[rec.id]||[]).map(q=>S.byId[q]).filter(q=>q&&q.gender!==rec.gender); if(sp.length===1) guess=sp[0]; }
+  return {father,mother,guess,extra:ps.filter(q=>q!==father&&q!==mother)};
+}
+function parentsHtml(id){
+  const {father,mother,guess,extra}=fatherMother(id); if(!father&&!mother) return '';
+  const link=q=>`<a href="#" class="jl" data-j="${q.id}">${esc(q.name)}</a>`;
+  const unk=(role)=>guess?`<span style="color:var(--gray)">${link(guess)} <small>(spouse of ${role==='Father'?'mother':'father'} — not yet recorded as parent)</small></span>`:'<span style="color:var(--gray)">not recorded</span>';
+  return `<p><b>Father:</b> ${father?link(father):unk('Father')}</p><p><b>Mother:</b> ${mother?link(mother):unk('Mother')}</p>`+
+    (extra.length?`<p><b>Other parent(s):</b> ${extra.map(link).join(', ')}</p>`:'');
+}
+
+// ── TRACEABILITY: lineage trail & siblings ─────────────────
+function lineage(id){ const path=[]; let cur=id, guard=0; while(cur&&guard++<50){ path.unshift(cur); cur=S.parentOf[cur]; } return path; }
+function lineageHtml(id){
+  const path=lineage(id); if(path.length<2) return '';
+  return `<div class="trail"><b>Lineage:</b> `+path.map((q,i)=>i===path.length-1
+    ?`<span class="me">${esc(S.byId[q].name)}</span>`
+    :`<a href="#" class="jl" data-j="${q}">${esc(short2(S.byId[q]))}</a>`).join('<span class="sep">›</span>')
+    +` <span style="color:var(--gray)">(${path.length-1} generation${path.length>2?'s':''} from ${esc(short2(S.byId[path[0]]))})</span></div>`;
+}
+function short2(p){ const parts=p.name.split(' '); return parts.length>2?parts[0]+' '+parts[parts.length-1]:p.name; }
+function siblings(id){
+  const ps=S.parents[id]||[]; if(!ps.length) return [];
+  const out=[]; S.people.forEach(q=>{ if(q.id===id) return; const shared=(S.parents[q.id]||[]).filter(x=>ps.includes(x)); if(shared.length) out.push({id:q.id,half:shared.length<Math.max(ps.length,S.parents[q.id].length)&&ps.length>1}); });
+  return out;
+}
+function siblingsHtml(id){
+  const sb=siblings(id); if(!sb.length) return '';
+  return `<p class="sibs"><b>Siblings (${sb.length}):</b> ${sb.map(x=>`<a href="#" class="jl" data-j="${x.id}">${esc(short2(S.byId[x.id]))}</a>${x.half?' <small>(half)</small>':''}`).join(', ')}</p>`;
+}
+
+// ── MAP (Leaflet + OpenStreetMap, loaded on first use) ─────
+let L_ready=null, MAP=null, PIN=null, mapMode='pick';
+function loadLeaflet(){
+  if(L_ready) return L_ready;
+  L_ready=new Promise((res,rej)=>{
+    const css=document.createElement('link'); css.rel='stylesheet'; css.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(css);
+    const js=document.createElement('script'); js.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'; js.onload=res; js.onerror=()=>rej(new Error('Map library could not be loaded (offline?)')); document.head.appendChild(js);
+  });
+  return L_ready;
+}
+async function openMap(mode,lat,lng,label){
+  mapMode=mode;
+  document.getElementById('map-title').textContent=mode==='pick'?'📍 Pick a location':'🗺 '+(label||'Location');
+  document.getElementById('map-search-row').style.display=mode==='pick'?'':'none';
+  document.getElementById('map-hint').style.display=mode==='pick'?'':'none';
+  document.getElementById('map-actions').style.display=mode==='pick'?'':'none';
+  document.getElementById('map-results').innerHTML='';
+  openOv('ov-map');
+  try{ await loadLeaflet(); }catch(e){ toast('⚠ '+e.message); return; }
+  const start=[lat||8.228,lng||124.245]; // Iligan City default
+  if(!MAP){
+    MAP=L.map('map').setView(start,lat?15:11);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(MAP);
+    MAP.on('click',e=>{ if(mapMode==='pick') setPin(e.latlng.lat,e.latlng.lng); });
+  } else { MAP.setView(start,lat?15:11); }
+  if(PIN){ MAP.removeLayer(PIN); PIN=null; }
+  if(lat&&lng) setPin(+lat,+lng,label);
+  setTimeout(()=>MAP.invalidateSize(),150);
+}
+function setPin(lat,lng,label){
+  if(!PIN){ PIN=L.marker([lat,lng],{draggable:mapMode==='pick'}).addTo(MAP); PIN.on('dragend',()=>{ const p=PIN.getLatLng(); PIN._ll=[p.lat,p.lng]; }); }
+  else PIN.setLatLng([lat,lng]);
+  PIN._ll=[lat,lng]; if(label) PIN.bindPopup(esc(label)).openPopup();
+}
+function showMap(id){ const p=S.byId[id]; openMap('view',+p.lat,+p.lng,p.name+(p.address?' — '+p.address:'')); }
+document.getElementById('f-map-btn').onclick=()=>{ const la=document.getElementById('f-lat').value, ln=document.getElementById('f-lng').value;
+  openMap('pick',la?+la:null,ln?+ln:null); const q=document.getElementById('f-addr').value.trim(); document.getElementById('map-q').value=la?'':q; if(!la&&q) document.getElementById('map-go').click(); };
+document.getElementById('map-go').onclick=async()=>{
+  const q=document.getElementById('map-q').value.trim(); if(!q) return;
+  const box=document.getElementById('map-results'); box.innerHTML='<button disabled>Searching…</button>';
+  try{
+    const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=6&q='+encodeURIComponent(q),{headers:{'Accept':'application/json'}});
+    const list=await r.json();
+    box.innerHTML=list.length?list.map((x,i)=>`<button type="button" data-i="${i}">${esc(x.display_name)}</button>`).join(''):'<button disabled>No results</button>';
+    box.querySelectorAll('button[data-i]').forEach(b=>b.onclick=()=>{ const x=list[+b.dataset.i]; setPin(+x.lat,+x.lon); MAP.setView([+x.lat,+x.lon],16); box.innerHTML=''; PIN._name=x.display_name; });
+  }catch(e){ box.innerHTML='<button disabled>Search unavailable</button>'; }
+};
+document.getElementById('map-q').onkeyup=e=>{ if(e.key==='Enter') document.getElementById('map-go').click(); };
+document.getElementById('map-gps').onclick=()=>{ if(!navigator.geolocation) return toast('No GPS on this device');
+  navigator.geolocation.getCurrentPosition(pos=>{ setPin(pos.coords.latitude,pos.coords.longitude); MAP.setView([pos.coords.latitude,pos.coords.longitude],16); },()=>toast('Location permission denied')); };
+document.getElementById('map-use').onclick=async()=>{
+  if(!PIN) return toast('Tap the map to place the pin first');
+  const [lat,lng]=PIN._ll; document.getElementById('f-lat').value=lat.toFixed(6); document.getElementById('f-lng').value=lng.toFixed(6);
+  const addr=document.getElementById('f-addr');
+  if(!addr.value.trim()||PIN._name){ addr.value=PIN._name||''; if(!addr.value){ try{ const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`); const j=await r.json(); addr.value=j.display_name||''; }catch(e){} } }
+  PIN._name=null; showLatLng(); closeOv('ov-map');
+};
+function showLatLng(){ const la=document.getElementById('f-lat').value, ln=document.getElementById('f-lng').value;
+  document.getElementById('f-latlng').innerHTML=la?`Pinned at ${la}, ${ln} · <a href="#" id="f-latlng-clear">remove pin</a>`:'';
+  const c=document.getElementById('f-latlng-clear'); if(c) c.onclick=e=>{ e.preventDefault(); document.getElementById('f-lat').value=''; document.getElementById('f-lng').value=''; showLatLng(); }; }
+
 // ── COMMENTS / DATED NOTES ────────────────────────────────
 function fmtDate(iso){ const d=new Date(iso); return isNaN(d)?'':d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}); }
 function commentsHtml(id){
@@ -801,5 +993,343 @@ function avatar(p){
 }
 init();
 </script>
+<!-- ASSISTANT --><script>
+/* ═══════════════════════════════════════════════════════════════════════
+   ENGRACIA FAMILY TREE — "Ask the tree" assistant
+   Runs 100% in the browser. No server, no API key, works offline.
+
+   Layer 1  NLU (machine learning, trained on the device at page load)
+            • Multinomial Naive Bayes intent classifier over word uni+bigrams
+            • Trigram-similarity name matcher (fuzzy, typo-tolerant)
+   Layer 2  Family-graph reasoning engine
+            • kinship between any two people (parent…cousin n-times removed, in-laws)
+            • lineage, ancestors, descendants, siblings, spouses, generations
+            • statistics & data-quality analysis of the whole tree
+   Layer 3  (optional) on-device language model via WebGPU (WebLLM) that
+            phrases answers naturally using Layer-2 facts as context.
+   Requires the globals S, esc, jump, fatherMother, siblings, lineage from index.html.
+   ═══════════════════════════════════════════════════════════════════════ */
+(function(){
+'use strict';
+
+/* ───────────────────────── 1. TEXT UTILITIES ───────────────────────── */
+const STOP=new Set('the a an of is are was were who whom whose what which how many much to for in on at by from with and or do does did please tell me show list give find about between his her their its it this that these those have has had can could would be been'.split(' '));
+function norm(t){ return (t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9' ]+/g,' ').replace(/\s+/g,' ').trim(); }
+function tokens(t){ return norm(t).split(' ').filter(Boolean); }
+function feats(t){ const w=tokens(t).filter(x=>!STOP.has(x)); const f=[...w]; for(let i=0;i<w.length-1;i++) f.push(w[i]+'_'+w[i+1]); return f; }
+function trigrams(s){ s='  '+norm(s)+' '; const out=[]; for(let i=0;i<s.length-2;i++) out.push(s.slice(i,i+3)); return out; }
+function dice(a,b){ const A=trigrams(a), B=trigrams(b); if(!A.length||!B.length) return 0; const m=new Map(); A.forEach(x=>m.set(x,(m.get(x)||0)+1)); let hit=0; B.forEach(x=>{ const c=m.get(x); if(c){ hit++; m.set(x,c-1); } }); return 2*hit/(A.length+B.length); }
+
+/* ───────────────────── 2. NAIVE BAYES INTENT CLASSIFIER ─────────────── */
+const TRAIN={
+  relation:['how is X related to Y','what is the relationship between X and Y','relation of X to Y','how are X and Y related','is X related to Y','what is X to Y','X and Y relationship','how am i related to X','what does X call Y','connection between X and Y'],
+  parents:['who are the parents of X','who is the father of X','who is the mother of X','X parents','X father','X mother','who are X mom and dad','parents of X','who gave birth to X','X dad'],
+  children:['who are the children of X','children of X','X children','how many children does X have','kids of X','sons and daughters of X','list the children of X','does X have children','X kids','offspring of X'],
+  siblings:['who are the siblings of X','siblings of X','X siblings','brothers and sisters of X','X brothers','X sisters','does X have siblings','how many siblings does X have'],
+  spouse:['who is the spouse of X','who is X married to','X spouse','X wife','X husband','who did X marry','wife of X','husband of X','is X married','partner of X'],
+  lineage:['lineage of X','trace X to esau','ancestors of X','X ancestors','how is X descended from esau','family line of X','trace the line of X','X lineage','where does X come from','path from esau to X','genealogy of X','X ancestry'],
+  descendants:['descendants of X','how many descendants does X have','X descendants','grandchildren of X','great grandchildren of X','who descends from X','X grandchildren','all descendants of X','how big is the branch of X','branch of X'],
+  who:['who is X','tell me about X','X','about X','details of X','info on X','what do you know about X','show X','find X','profile of X','search X','X details'],
+  generation:['which generation is X','what generation is X','X generation','generation of X','how many generations from esau to X','is X gen 5'],
+  cousins:['cousins of X','X cousins','who are the cousins of X','first cousins of X','second cousins of X'],
+  uncles:['uncles of X','aunts of X','X uncles and aunts','who are the uncles of X','nephews of X','nieces of X','X nephews and nieces'],
+  grandparents:['grandparents of X','grandfather of X','grandmother of X','X grandparents','great grandfather of X','who is the grandfather of X'],
+  stats:['statistics','stats','how many people are in the tree','how many people','summary of the family','analyze the family tree','analysis','overview','family tree analysis','how many generations','tell me about the family','give me numbers','breakdown by generation','how many men and women','count'],
+  biggest:['which branch is the largest','largest branch','biggest branch','who has the most children','most children','most descendants','largest family','who had the most kids','biggest family'],
+  surname:['list all people with surname X','everyone named X','who are the X family','people with the surname X','all the X','how many X are there','members of X family','show the X branch'],
+  names:['most common first names','common names','popular names','what names repeat','name frequency','most common names'],
+  where:['where does X live','address of X','X address','where is X','location of X','where does X stay','home of X','who lives in X'],
+  quality:['what data is missing','missing data','data quality','who has no mother recorded','incomplete records','who has no photo','missing photos','what needs to be completed','gaps in the tree','which people lack details'],
+  living:['who is deceased','who died','deceased people','who is still living','death records','who passed away'],
+  oldest:['who is the oldest','earliest person','who was born first','root ancestor','who is the root','founder','first generation'],
+  youngest:['who is the youngest','latest generation','newest members','youngest generation','gen 7','most recent generation'],
+  help:['help','what can you do','what can i ask','commands','how do i use this','examples','what questions can you answer'],
+  greeting:['hello','hi','good morning','hey','kumusta','magandang umaga','thanks','thank you','salamat'],
+};
+const NB={classes:[],prior:{},cond:{},vocab:new Set(),total:{}};
+function trainNB(){
+  const counts={};
+  for(const [c,exs] of Object.entries(TRAIN)){ NB.classes.push(c); counts[c]={}; NB.total[c]=0; NB.prior[c]=exs.length;
+    exs.forEach(e=>feats(e).forEach(f=>{ counts[c][f]=(counts[c][f]||0)+1; NB.total[c]++; NB.vocab.add(f); })); }
+  NB.cond=counts;
+}
+function classify(text){
+  const f=feats(text.replace(/\b[A-Z][a-z]+\b/g,m=>m)); const V=NB.vocab.size||1; let best=null, scores={};
+  const n=Object.values(NB.prior).reduce((a,b)=>a+b,0);
+  for(const c of NB.classes){ let s=Math.log(NB.prior[c]/n);
+    for(const x of f) s+=Math.log(((NB.cond[c][x]||0)+0.5)/(NB.total[c]+0.5*V));
+    scores[c]=s; if(best===null||s>scores[best]) best=c; }
+  // confidence = softmax gap between best and runner-up
+  const sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]); const conf=1/(1+Math.exp(-(sorted[0][1]-sorted[1][1])));
+  return {intent:best,conf,scores};
+}
+
+/* ───────────────────── 3. FUZZY NAME RESOLUTION ─────────────────────── */
+let NAMEIDX=[];
+function buildNameIndex(){
+  NAMEIDX=S.people.map(p=>{ const forms=new Set([p.name]); if(p.nickname) forms.add(p.nickname.replace(/["“”]/g,'')); if(p.born_name) forms.add(p.born_name);
+    const parts=p.name.split(/\s+/); forms.add(parts[0]); if(parts.length>1) forms.add(parts[0]+' '+parts[parts.length-1]);
+    return {id:p.id, forms:[...forms].map(norm).filter(Boolean)}; });
+}
+/** Find up to `max` distinct people mentioned in the text, with the matched span removed from further matching. */
+function findPeople(text,max=2){
+  const words=tokens(text); const found=[]; const used=new Set();
+  const cands=[];
+  for(let len=Math.min(5,words.length); len>=1; len--) for(let i=0;i+len<=words.length;i++){
+    const span=words.slice(i,i+len); if(span.every(w=>STOP.has(w)||w.length<3)) continue;
+    const q=span.join(' ');
+    for(const n of NAMEIDX) for(const f of n.forms){ let sc=dice(q,f);
+      if(f===q) sc=1.2; else if(len===1 && f.split(' ')[0]===q) sc=1.0;       // exact first-name hit
+      if(sc>=0.72) cands.push({id:n.id,sc:sc+len*0.01,i,len}); } }
+  cands.sort((a,b)=>b.sc-a.sc);
+  for(const c of cands){ if(found.length>=max) break; if(found.some(f=>f.id===c.id)) continue;
+    let clash=false; for(let k=c.i;k<c.i+c.len;k++) if(used.has(k)) clash=true; if(clash) continue;
+    for(let k=c.i;k<c.i+c.len;k++) used.add(k); found.push({id:c.id,score:c.sc,span:words.slice(c.i,c.i+c.len).join(' ')}); }
+  // order by position in the sentence (X before Y)
+  return found.sort((a,b)=>text.toLowerCase().indexOf(a.span)-text.toLowerCase().indexOf(b.span));
+}
+
+/* ───────────────────── 4. FAMILY-GRAPH ENGINE ───────────────────────── */
+const P=id=>S.byId[id];
+const nm=id=>P(id)?P(id).name:id;
+const link=id=>`<a href="#" class="al" data-j="${id}">${esc(nm(id))}</a>`;
+const list=ids=>ids.length?ids.map(link).join(', '):'none recorded';
+const g=(id,m,f,n)=>{ const x=P(id); return !x?n:x.gender==='F'?f:m; };
+function allParents(id){ return S.parents[id]||[]; }
+function allKids(id){ return S.people.filter(q=>allParents(q.id).includes(id)).map(q=>q.id); }
+function ancestorsWithDepth(id){ const out=new Map(); const st=[[id,0]]; while(st.length){ const [c,d]=st.pop(); for(const p of allParents(c)){ if(!out.has(p)||out.get(p)>d+1){ out.set(p,d+1); st.push([p,d+1]); } } } return out; }
+function descendants(id){ const out=[]; const seen=new Set(); const st=[...allKids(id)]; while(st.length){ const c=st.pop(); if(seen.has(c)) continue; seen.add(c); out.push(c); st.push(...allKids(c)); } return out; }
+function ordinal(n){ return ['','first','second','third','fourth','fifth','sixth','seventh','eighth'][n]||n+'th'; }
+function greats(n){ return n<=0?'':n===1?'great-':n===2?'great-great-':`${n}×great-`; }
+/** Blood relationship of A to B: "A is the ___ of B". */
+function kinship(a,b){
+  if(a===b) return {text:'the same person'};
+  const A=ancestorsWithDepth(a), B=ancestorsWithDepth(b);
+  let best=null;
+  if(B.has(a)) best={lca:a,d1:0,d2:B.get(a)};
+  if(A.has(b)) best={lca:b,d1:A.get(b),d2:0};
+  if(!best){ for(const [anc,d1] of A){ if(B.has(anc)){ const d2=B.get(anc); if(!best||d1+d2<best.d1+best.d2) best={lca:anc,d1,d2}; } } }
+  if(!best) return null;
+  const {d1,d2}=best;
+  if(d1===0){ // a is ancestor of b
+    if(d2===1) return {text:g(a,'father','mother','parent'),via:best};
+    return {text:greats(d2-2)+g(a,'grandfather','grandmother','grandparent'),via:best}; }
+  if(d2===0){ if(d1===1) return {text:g(a,'son','daughter','child'),via:best};
+    return {text:greats(d1-2)+g(a,'grandson','granddaughter','grandchild'),via:best}; }
+  if(d1===1&&d2===1){ const shared=allParents(a).filter(x=>allParents(b).includes(x)).length; const full=shared>=2||(allParents(a).length===1&&allParents(b).length===1);
+    return {text:(full?'':'half-')+g(a,'brother','sister','sibling'),via:best}; }
+  if(d1===1) return {text:greats(d2-2)+g(a,'uncle','aunt','uncle/aunt'),via:best};
+  if(d2===1) return {text:greats(d1-2)+g(a,'nephew','niece','nephew/niece'),via:best};
+  const deg=Math.min(d1,d2)-1, rem=Math.abs(d1-d2);
+  return {text:`${ordinal(deg)} cousin${rem?` ${rem===1?'once':rem===2?'twice':rem+' times'} removed`:''}`,via:best};
+}
+/** Relationship including marriage: returns html sentence. */
+function relationSentence(a,b){
+  const k=kinship(a,b); if(k) return `${link(a)} is the <b>${k.text}</b> of ${link(b)}.`+viaText(k.via,a,b);
+  if(S.spouses[a]&&S.spouses[a].includes(b)) return `${link(a)} is the <b>${g(a,'husband','wife','spouse')}</b> of ${link(b)}.`;
+  for(const sp of S.spouses[a]||[]){ const k2=kinship(sp,b); if(k2) return `${link(a)} is the <b>${k2.text}-in-law</b> of ${link(b)} (${g(a,'husband','wife','spouse')} of ${link(sp)}, who is ${g(sp,'his','her','their')} ${k2.text}).`; }
+  for(const sp of S.spouses[b]||[]){ const k2=kinship(a,sp); if(k2) return `${link(a)} is the <b>${k2.text}</b> of ${link(sp)}, the ${g(sp,'husband','wife','spouse')} of ${link(b)} — so ${g(a,'he','she','they')} is ${g(b,'his','her','their')} ${k2.text}-in-law.`; }
+  return `I can't find a blood or marriage connection between ${link(a)} and ${link(b)} in the recorded links.`;
+}
+function viaText(via,a,b){ if(!via||via.d1===0||via.d2===0) return ''; return ` <small>Common ancestor: ${link(via.lca)} — ${via.d1} generation${via.d1>1?'s':''} above ${esc(short(a))}, ${via.d2} above ${esc(short(b))}.</small>`; }
+function short(id){ const p=P(id); if(!p) return id; const t=p.name.split(' '); return t.length>2?t[0]+' '+t[t.length-1]:p.name; }
+function genOf(id){ const m=/(\d+)/.exec(P(id).generation||''); return m?+m[1]:null; }
+
+/* ───────────────────── 5. ANSWER BUILDERS ───────────────────────────── */
+function personCard(id){
+  const p=P(id), fm=fatherMother(id), sp=S.spouses[id]||[], kids=allKids(id), sib=siblings(id).map(x=>x.id);
+  const years=[p.birth_year,p.death_year].filter(Boolean).join(' – ');
+  return `<div class="acard">${link(id)}${p.nickname?` <i>${esc(p.nickname)}</i>`:''}${p.generation?` · ${esc(p.generation)}`:''}${years?` · ${esc(years)}`:''}
+    ${p.born_name?`<br>Born as ${esc(p.born_name)}.`:''}
+    <br>Father: ${fm.father?link(fm.father.id):'not recorded'} · Mother: ${fm.mother?link(fm.mother.id):'not recorded'}
+    ${sp.length?`<br>Spouse${sp.length>1?'s':''}: ${list(sp)}`:''}
+    ${kids.length?`<br>Children (${kids.length}): ${list(kids)}`:'<br>No children recorded.'}
+    ${sib.length?`<br>Siblings (${sib.length}): ${list(sib)}`:''}
+    ${p.address?`<br>📍 ${esc(p.address)}`:''}
+    ${p.notes?`<br><span class="anote">${esc(p.notes)}</span>`:''}</div>`;
+}
+function stats(){
+  const gens={}; let m=0,f=0; S.people.forEach(p=>{ const k=p.generation||'?'; gens[k]=(gens[k]||0)+1; if(p.gender==='F') f++; else m++; });
+  const genRows=Object.entries(gens).sort((a,b)=>(parseInt(a[0])||99)-(parseInt(b[0])||99)).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v}</td></tr>`).join('');
+  const withKids=S.people.map(p=>[p.id,allKids(p.id).length]).filter(x=>x[1]).sort((a,b)=>b[1]-a[1]);
+  const root=S.roots[0]; const branches=root?allKids(root).flatMap(c=>allKids(c)).map(id=>[id,descendants(id).length]).sort((a,b)=>b[1]-a[1]):[];
+  const photos=Object.keys(S.photos).length, addr=S.people.filter(p=>p.address||p.lat).length, notes=Object.values(S.comments||{}).reduce((a,b)=>a+b.length,0);
+  const maxGen=Math.max(...S.people.map(p=>genOf(p.id)||0));
+  return `<b>Family tree analysis</b><br>
+   <b>${S.people.length}</b> people (${m} men, ${f} women) across <b>${maxGen} generations</b>, linked by ${S.rels.length} parent/spouse records. ${photos} have photos, ${addr} have an address, ${notes} notes posted.
+   <table class="atbl"><tr><th>Generation</th><th>People</th></tr>${genRows}</table>
+   <b>Largest branches</b> (descendants of Capitan Fruto's children):<br>${branches.map(([id,n])=>`${link(id)} — ${n}`).join('<br>')}
+   <br><b>Most children:</b> ${withKids.slice(0,5).map(([id,n])=>`${link(id)} (${n})`).join(', ')}.
+   <br><small>Ask me "most common names", "data quality", or "descendants of Eusebio" for more.</small>`;
+}
+function dataQuality(){
+  const noMother=S.people.filter(p=>!S.spouseOnly.has(p.id)&&allParents(p.id).length&&!fatherMother(p.id).mother);
+  const noFather=S.people.filter(p=>!S.spouseOnly.has(p.id)&&allParents(p.id).length&&!fatherMother(p.id).father);
+  const noYears=S.people.filter(p=>!p.birth_year); const noPhoto=S.people.filter(p=>!S.photos[p.id]);
+  const surnameOnly=S.people.filter(p=>/^m\. [A-Z][a-z]+\.?$/.test(p.notes||''));
+  return `<b>Data-quality analysis</b><br>
+   • ${noMother.length} people have a father but <b>no mother recorded</b>${noMother.length?' — e.g. '+list(noMother.slice(0,6).map(p=>p.id))+(noMother.length>6?'…':''):''}.<br>
+   • ${noFather.length} have a mother but no father recorded.<br>
+   • ${surnameOnly.length} spouses are known <b>only by surname</b> (e.g. "m. Cebedo") — adding their full names would complete those families.<br>
+   • ${noYears.length} of ${S.people.length} have no birth year; ${noPhoto.length} have no photo.<br>
+   <small>Tip: log in, open a person, and use Edit to fill these in.</small>`;
+}
+function commonNames(){
+  const c={}; S.people.forEach(p=>{ const f=p.name.split(' ')[0]; if(f.length>2) c[f]=(c[f]||0)+1; });
+  const top=Object.entries(c).filter(x=>x[1]>1).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const s={}; S.people.forEach(p=>{ const t=p.name.replace(/\b(JR\.?|SR\.?|II|III)\b/g,'').trim().split(' '); const last=t[t.length-1]; if(last.length>2) s[last]=(s[last]||0)+1; });
+  const tops=Object.entries(s).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  return `<b>Most common first names:</b> ${top.map(([n,k])=>`${esc(n)} (${k})`).join(', ')}.<br><b>Surnames in the tree:</b> ${tops.map(([n,k])=>`${esc(n)} (${k})`).join(', ')}.`;
+}
+function surnameSearch(q){
+  const w=tokens(q).filter(x=>!STOP.has(x)&&!['surname','named','family','people','members','everyone','all','branch','called','list','show','name'].includes(x));
+  const term=w[w.length-1]; if(!term) return null;
+  const hits=S.people.filter(p=>norm(p.name).split(' ').includes(term));
+  if(!hits.length) return null;
+  const byGen={}; hits.forEach(p=>{ (byGen[p.generation||'?']=byGen[p.generation||'?']||[]).push(p.id); });
+  return `<b>${hits.length}</b> people carry the name <b>${esc(term.toUpperCase())}</b>:<br>`+Object.entries(byGen).sort().map(([gen,ids])=>`<b>${esc(gen)}</b>: ${list(ids)}`).join('<br>');
+}
+
+/* ───────────────────── 6. DIALOGUE MANAGER ──────────────────────────── */
+function answer(text){
+  const t=text.trim(); if(!t) return '';
+  const {intent,conf}=classify(t); const ppl=findPeople(t,2); const a=ppl[0]&&ppl[0].id, b=ppl[1]&&ppl[1].id;
+  const need=id=>id?null:`Which person do you mean? Try a name like <i>Fruto</i>, <i>Eusebio</i> or <i>Ray Sitchon</i>.`;
+  const intentNoName=['stats','biggest','names','quality','living','oldest','youngest','help','greeting','surname'];
+  // a bare name (nothing but the name, maybe one filler word) → profile
+  if(ppl.length===1&&tokens(t).length<=ppl[0].span.split(' ').length+1) return personCard(a);
+  // "trace X to Esau" / "descendants of X and Y" keep their intent; any other sentence with two people is a relationship question
+  if(ppl.length===2&&!['lineage','descendants','children','parents','siblings','spouse','generation'].includes(intent)) return relationSentence(a,b);
+  switch(intent){
+    case 'relation': if(!b) return a?`Related to whom? Ask e.g. "How is ${esc(short(a))} related to Esau?"`:need(a); return relationSentence(a,b);
+    case 'parents': { if(!a) return need(a); const fm=fatherMother(a); return `${link(a)} — Father: ${fm.father?link(fm.father.id):'not recorded'}; Mother: ${fm.mother?link(fm.mother.id):fm.guess?link(fm.guess.id)+' (spouse of the father; not yet recorded as parent)':'not recorded'}.`; }
+    case 'children': { if(!a) return need(a); const k=allKids(a); return k.length?`${link(a)} has <b>${k.length}</b> recorded child${k.length>1?'ren':''}: ${list(k)}.`:`${link(a)} has no children recorded.`; }
+    case 'siblings': { if(!a) return need(a); const s=siblings(a); return s.length?`${link(a)} has <b>${s.length}</b> sibling${s.length>1?'s':''}: ${s.map(x=>link(x.id)+(x.half?' (half)':'')).join(', ')}.`:`${link(a)} has no siblings recorded.`; }
+    case 'spouse': { if(!a) return need(a); const s=S.spouses[a]||[]; return s.length?`${link(a)} married ${list(s)}.`:`${link(a)} has no spouse recorded${/m\. /.test(P(a).notes||'')?' by full name — the document says "'+esc(P(a).notes)+'"':''}.`; }
+    case 'lineage': { if(!a) return need(a); const path=lineage(a); const anc=[...ancestorsWithDepth(a).keys()];
+      return `<b>Lineage of ${esc(short(a))}</b> (${path.length-1} generations from ${esc(short(path[0]))}):<br>${path.map(link).join(' › ')}<br><small>All recorded ancestors (${anc.length}): ${list(anc)}</small>`; }
+    case 'descendants': { if(!a) return need(a); const d=descendants(a); if(!d.length) return `${link(a)} has no descendants recorded.`;
+      const byGen={}; d.forEach(id=>{ const k=P(id).generation||'?'; (byGen[k]=byGen[k]||[]).push(id); });
+      return `${link(a)} has <b>${d.length}</b> recorded descendants:<br>`+Object.entries(byGen).sort().map(([k,ids])=>`<b>${esc(k)}</b> (${ids.length}): ${list(ids)}`).join('<br>'); }
+    case 'grandparents': { if(!a) return need(a); const gp=[...new Set(allParents(a).flatMap(allParents))]; const ggp=[...new Set(gp.flatMap(allParents))];
+      return `${link(a)} — grandparents: ${list(gp)}${ggp.length?`; great-grandparents: ${list(ggp)}`:''}.`; }
+    case 'cousins': { if(!a) return need(a); const gp=new Set(allParents(a).flatMap(allParents)); const c=S.people.filter(q=>q.id!==a&&!allParents(a).includes(q.id)&&!siblings(a).some(s=>s.id===q.id)&&allParents(q.id).some(p=>allParents(p).some(x=>gp.has(x)))).map(q=>q.id);
+      return c.length?`${link(a)} has <b>${c.length}</b> first cousins: ${list(c)}.`:`No first cousins recorded for ${link(a)}.`; }
+    case 'uncles': { if(!a) return need(a); if(/nephew|niece/.test(norm(t))){ const n=siblings(a).flatMap(s=>allKids(s.id)); return n.length?`Nephews and nieces of ${link(a)} (${n.length}): ${list(n)}.`:`No nephews or nieces recorded for ${link(a)}.`; }
+      const u=[...new Set(allParents(a).flatMap(p=>siblings(p).map(x=>x.id)))]; return u.length?`Uncles and aunts of ${link(a)} (${u.length}): ${list(u)}.`:`No uncles or aunts recorded for ${link(a)}.`; }
+    case 'generation': { if(!a) return need(a); const path=lineage(a); return `${link(a)} is in <b>${esc(P(a).generation||'an unrecorded generation')}</b> — ${path.length-1} generation${path.length>2?'s':''} below ${esc(short(path[0]))}.`; }
+    case 'where': { if(a){ const p=P(a); return p.address||p.lat?`${link(a)} — 📍 ${esc(p.address||p.lat+', '+p.lng)}${p.lat?` <a href="https://www.google.com/maps?q=${encodeURIComponent(p.lat+','+p.lng)}" target="_blank" rel="noopener">open in Google Maps ↗</a>`:''}`:`No address recorded for ${link(a)}. Log in → Edit → Address to add one.`; }
+      const place=tokens(t).filter(x=>!STOP.has(x)&&!/live|lives|where|address|who|stay|home/.test(x)).join(' '); const hits=S.people.filter(p=>p.address&&norm(p.address).includes(place)); return hits.length?`People with an address matching “${esc(place)}”: ${list(hits.map(p=>p.id))}.`:`Nobody has an address matching “${esc(place)}” yet.`; }
+    case 'who': { if(!a) return need(a); return personCard(a); }
+    case 'stats': return stats();
+    case 'biggest': { const w=S.people.map(p=>[p.id,allKids(p.id).length]).sort((a,b)=>b[1]-a[1]).slice(0,5); const d=S.people.filter(p=>!S.spouseOnly.has(p.id)).map(p=>[p.id,descendants(p.id).length]).sort((a,b)=>b[1]-a[1]).slice(1,6);
+      return `<b>Most children:</b> ${w.map(([id,n])=>`${link(id)} (${n})`).join(', ')}.<br><b>Most descendants</b> (after Esau): ${d.map(([id,n])=>`${link(id)} (${n})`).join(', ')}.`; }
+    case 'surname': return surnameSearch(t)||`I couldn't find that surname. Try "everyone named Rosauro".`;
+    case 'names': return commonNames();
+    case 'quality': return dataQuality();
+    case 'living': { const d=S.people.filter(p=>p.death_year||/deceased/i.test(p.notes||'')); return d.length?`Recorded as deceased (${d.length}): ${list(d.map(p=>p.id))}.<br><small>The source document rarely records death dates — add them via Edit.</small>`:'No death records yet.'; }
+    case 'oldest': return `The root ancestor is ${link('esau')} (born c.1640, Istanbul) with ${link('lileni')} of Tawi-Tawi. Their eldest, ${link('fruto')}, born Faisal Ozal, became Capitan Fruto Engracia.`;
+    case 'youngest': { const mg=Math.max(...S.people.map(p=>genOf(p.id)||0)); const ids=S.people.filter(p=>genOf(p.id)===mg).map(p=>p.id); return `The youngest recorded generation is <b>Gen ${mg}</b> (${ids.length}): ${list(ids)}.`; }
+    case 'greeting': return `Hello! I'm the tree's assistant — I run entirely on your device. Ask me things like <i>“How is Ray related to Dr. Solfe?”</i>, <i>“Descendants of Eusebio”</i>, or <i>“Analyze the family tree”</i>.`;
+    case 'help': default:
+      if(a) return personCard(a);
+      return `I can answer questions about the ${S.people.length} people in this tree, all offline:<br>
+        • <b>Relationships</b> — “How is Ray related to Dr. Ahmad Alonto?”<br>
+        • <b>Family</b> — parents, children, siblings, spouse, cousins, uncles, grandparents of anyone<br>
+        • <b>Lineage</b> — “Trace Arabbellah to Esau”, “Descendants of Norberto”<br>
+        • <b>Analysis</b> — “Analyze the family tree”, “Largest branch”, “Most common names”, “Data quality”<br>
+        • <b>Search</b> — “Everyone named Rosauro”, “Where does May live?”<br>
+        <small>Intent confidence for your last question: ${(conf*100).toFixed(0)}%. Names are matched fuzzily, so spelling needn't be exact.</small>`;
+  }
+}
+
+/* ───────────────────── 7. OPTIONAL LOCAL LANGUAGE MODEL (WebGPU) ───── */
+const LLM={engine:null,loading:false,model:'Qwen2.5-0.5B-Instruct-q4f16_1-MLC'};
+async function loadLLM(status){
+  if(LLM.engine||LLM.loading) return LLM.engine; LLM.loading=true;
+  try{
+    if(!navigator.gpu) throw new Error('WebGPU is not available in this browser (try Chrome/Edge on a PC).');
+    status('Loading on-device language model… first time downloads ~350 MB and is cached.');
+    const mod=await import('https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.79/+esm');
+    LLM.engine=await mod.CreateMLCEngine(LLM.model,{initProgressCallback:p=>status(p.text)});
+    status('Language model ready — answers will now be phrased by the local model.');
+  }catch(e){ status('Local model unavailable: '+e.message); LLM.engine=null; }
+  LLM.loading=false; return LLM.engine;
+}
+async function rephrase(question,factsHtml){
+  if(!LLM.engine) return null;
+  const facts=factsHtml.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,1500);
+  const r=await LLM.engine.chat.completions.create({messages:[
+    {role:'system',content:'You are a warm, concise genealogy assistant for the Engracia family of Mindanao. Answer ONLY from the facts given; never invent names, dates or relationships. 2–4 sentences.'},
+    {role:'user',content:`Question: ${question}\nFacts from the family database: ${facts}\nAnswer:`}],temperature:0.3,max_tokens:180});
+  return r.choices[0].message.content.trim();
+}
+
+/* ───────────────────── 8. CHAT UI ───────────────────────────────────── */
+const SUGGEST=['Analyze the family tree','How is Ray related to Dr. Solfe?','Descendants of Eusebio','Trace Arabbellah to Esau','Largest branch','Data quality','Everyone named Rosauro'];
+function ui(){
+  const css=document.createElement('style'); css.textContent=`
+  #ai-fab{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:95;width:54px;height:54px;border-radius:50%;background:var(--brown);color:var(--gold2);border:2px solid var(--gold);font-size:1.5rem;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer}
+  #ai{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.55);align-items:flex-end;justify-content:center}
+  #ai.open{display:flex}
+  #ai-box{background:var(--parch);border:3px solid var(--gold);border-bottom:none;border-radius:14px 14px 0 0;width:100%;max-width:640px;height:min(88vh,760px);display:flex;flex-direction:column;overflow:hidden}
+  @media(min-width:640px){#ai{align-items:center}#ai-box{border-radius:12px;border-bottom:3px solid var(--gold)}}
+  #ai-head{background:linear-gradient(135deg,var(--brown),var(--dark));color:var(--gold2);padding:10px 14px;display:flex;align-items:center;gap:8px}
+  #ai-head b{flex:1;font-size:.95rem}#ai-head small{color:#d4a84b;font-size:.68rem;display:block}
+  #ai-head button{background:none;border:1px solid var(--gold);color:var(--gold2);border-radius:5px;padding:4px 8px;cursor:pointer;font:inherit;font-size:.72rem}
+  #ai-log{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+  .msg{max-width:92%;padding:9px 12px;border-radius:12px;font-size:.88rem;line-height:1.5;white-space:normal}
+  .msg.u{align-self:flex-end;background:var(--brown2);color:#fff;border-bottom-right-radius:3px}
+  .msg.b{align-self:flex-start;background:#fff;border:1px solid #e3d3ad;border-bottom-left-radius:3px}
+  .msg.s{align-self:center;background:none;color:var(--gray);font-size:.72rem;text-align:center}
+  .msg a.al{color:var(--brown);border-bottom:1px dotted var(--gold);text-decoration:none}
+  .acard{line-height:1.55}.anote{color:var(--gray);font-size:.82rem}
+  .atbl{border-collapse:collapse;margin:6px 0;font-size:.82rem}.atbl td,.atbl th{border:1px solid #e3d3ad;padding:3px 10px}.atbl th{background:var(--parch2)}
+  #ai-sug{display:flex;gap:6px;overflow-x:auto;padding:6px 10px;scrollbar-width:none;border-top:1px solid #e3d3ad}
+  #ai-sug button{flex:none;background:#fff;border:1px solid var(--gold);color:var(--brown);border-radius:14px;padding:5px 10px;font:inherit;font-size:.74rem;cursor:pointer}
+  #ai-in{display:flex;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));border-top:1px solid #e3d3ad;background:var(--parch)}
+  #ai-q{flex:1;padding:10px 12px;border:2px solid var(--gold);border-radius:20px;font:inherit;font-size:.9rem;background:#fff;outline:none}
+  #ai-send{background:var(--gold);color:var(--dark);border:none;border-radius:20px;padding:0 16px;font:inherit;font-weight:bold;cursor:pointer}
+  #ai-mic{background:#fff;border:1px solid var(--gold);border-radius:50%;width:40px;cursor:pointer;font-size:1rem}`;
+  document.head.appendChild(css);
+  const fab=document.createElement('button'); fab.id='ai-fab'; fab.title='Ask the tree'; fab.textContent='💬'; document.body.appendChild(fab);
+  const box=document.createElement('div'); box.id='ai'; box.innerHTML=`<div id="ai-box">
+    <div id="ai-head"><b>💬 Ask the tree<small>On-device assistant · no data leaves your phone</small></b>
+      <button id="ai-llm" title="Load a small language model that runs in your browser (WebGPU, PC)">✨ Local LM</button><button id="ai-close">✕</button></div>
+    <div id="ai-log"></div>
+    <div id="ai-sug">${SUGGEST.map(s=>`<button>${esc(s)}</button>`).join('')}</div>
+    <div id="ai-in"><input id="ai-q" placeholder="Ask about anyone in the family…" autocomplete="off"><button id="ai-mic" title="Speak" style="display:none">🎤</button><button id="ai-send">Ask</button></div></div>`;
+  document.body.appendChild(box);
+  const log=box.querySelector('#ai-log'), q=box.querySelector('#ai-q');
+  const add=(html,cls)=>{ const m=document.createElement('div'); m.className='msg '+cls; m.innerHTML=html; log.appendChild(m); log.scrollTop=log.scrollHeight;
+    m.querySelectorAll('a.al').forEach(a=>a.onclick=e=>{ e.preventDefault(); box.classList.remove('open'); jump(a.dataset.j); }); return m; };
+  const status=t=>add(esc(t),'s');
+  async function ask(text){ text=text.trim(); if(!text) return; add(esc(text),'u'); q.value='';
+    const t0=performance.now(); let html; try{ html=answer(text); }catch(e){ html='Sorry — something went wrong analysing that: '+esc(e.message); }
+    const m=add(html,'b');
+    if(LLM.engine){ try{ const r=await rephrase(text,html); if(r) m.innerHTML=`<i>${esc(r)}</i><hr style="border:none;border-top:1px dashed #e3d3ad;margin:6px 0">`+html; m.querySelectorAll('a.al').forEach(a=>a.onclick=e=>{e.preventDefault();box.classList.remove('open');jump(a.dataset.j);}); }catch(e){} }
+    if(window.__aiDebug) status(`${(performance.now()-t0).toFixed(0)} ms`); }
+  fab.onclick=()=>{ box.classList.add('open'); if(!log.children.length) add(answer('hello'),'b'); setTimeout(()=>q.focus(),100); };
+  box.querySelector('#ai-close').onclick=()=>box.classList.remove('open');
+  box.onclick=e=>{ if(e.target===box) box.classList.remove('open'); };
+  box.querySelector('#ai-send').onclick=()=>ask(q.value);
+  q.onkeydown=e=>{ if(e.key==='Enter') ask(q.value); };
+  box.querySelectorAll('#ai-sug button').forEach(b=>b.onclick=()=>ask(b.textContent));
+  box.querySelector('#ai-llm').onclick=async()=>{ const b=box.querySelector('#ai-llm'); b.disabled=true; await loadLLM(status); b.textContent=LLM.engine?'✨ LM on':'✨ Local LM'; b.disabled=false; };
+  // voice input where available (Chrome/Android)
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(SR){ const mic=box.querySelector('#ai-mic'); mic.style.display=''; mic.onclick=()=>{ const r=new SR(); r.lang='en-PH'; r.onresult=e=>ask(e.results[0][0].transcript); r.start(); mic.textContent='…'; r.onend=()=>mic.textContent='🎤'; }; }
+}
+
+/* ───────────────────── 9. BOOT ──────────────────────────────────────── */
+function boot(){ trainNB(); buildNameIndex(); ui(); }
+const ready=()=>typeof S!=='undefined'&&S.people&&S.people.length;
+if(ready()) boot(); else { const iv=setInterval(()=>{ if(ready()){ clearInterval(iv); boot(); } },300); }
+// keep the name index fresh after edits
+const _load=window.load; if(typeof _load==='function') window.load=async function(){ const r=await _load.apply(this,arguments); buildNameIndex(); return r; };
+window.TreeAI={answer,classify,findPeople,kinship,relationSentence,stats,dataQuality};
+})();
+
+</script><!-- /ASSISTANT -->
 </body>
 </html>
